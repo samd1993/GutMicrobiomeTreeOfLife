@@ -1,4 +1,4 @@
-# GutMicrobiomeTreeOfLife README
+# Gut Microbiome Tree Of Life Project
 
 By curating an unprecedented dataset of animal gut microbiomes, the Gut Microbiome Tree of Life (GMToL) project aims to advance our understanding of the ecological and evolutionary forces shaping the animal gut microbiome, while also providing an invaluable comparative dataset to the scientific community.
 
