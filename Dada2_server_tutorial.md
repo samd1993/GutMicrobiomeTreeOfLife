@@ -100,6 +100,7 @@ Again, hit `i` and use this template to copy paste into the editor:
 
 module purge all
 module load qiime2/2022.8 
+
 qiime dada2 denoise-paired \
 --i-demultiplexed-seqs demuxStudyname.qza \
 --p-trunc-len-f 150 \
