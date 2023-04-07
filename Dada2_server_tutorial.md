@@ -1,6 +1,6 @@
 # How to access QUEST and submit a SLURM job
 This tutorial will show you how to access a High Performance Cluster (HPC) from your own terminal. Most research labs and tech companies utilize some kind of clustering of compute power so employees can run computational intensive tasks and keep everything in the same place rather than running things locally on their own machine.
-## Step 1: Access QUEST
+## Step 1: Access QUEST and make your project folder
 Open your terminal and type
 
 `ssh username@quest.northwestern.edu`
@@ -10,6 +10,20 @@ where username is your northwestern netID. Just like http is the protocol for ac
 You should be prompted with a password request. Type your netID password. The screen will be blank while you type for security reasons.
 
 If entered correctly you should see the quest logo and then you will have entered the server.
+
+You will notice you are in your $HOME directory. To access our project folder you will have to type:
+
+`cd /projects/p31966/`
+
+If you ever want to return to your home directory just type `cd ~/` the ~ stands for root directory. But because your $HOME directory only has 20Gb you will want to always work inside of our p31966 folder.
+
+Because there is 15 of us, make your own project directory named after yourself (I do "sdegregori" for example).
+
+`mkdir <yourname>
+cd <yourname>`
+
+You will always work inside of here. 
+
 ## Step 2: Download fastq.gz files
 Make a directory for your next study as you usually do such as `mkdir arizza`. Then `cd arizza` to move into your study directory. Next, go to SRA explorer and enter the accession number of your study and copy and paste the curl commands into your terminal. These should download into your directory.
 ## Step 3: Make manifest file
@@ -23,12 +37,15 @@ Now we are ready to import.
 Before you do however, it is bad etiquette to run any kind of computation in the login node. When you login to any kind of server you are in the login node. To formally request for memory to compute on you can run someting like this:
 
 `srun --account=p31966 --time=2:00:00 --partition=short --mem=4G --pty bash -l`
-
   
 
 where the account is our account quest has given us. Time is 2 hours and the memory is 4 gigs. If you want more than 4 hours then change --partition to `--parition=normal` instead of short.
 
-  
+**Important**: If at any point in this process you srun or module loading takes you back to your home directory you will have to reenter:
+
+`cd /projects/p31966/<yourname>`
+
+So always check you are where you belong by typing `pwd`
 
 Once your srun has been accepted you can now import your study.
 
@@ -111,7 +128,7 @@ Notice how the **--p-n-thread** count is set to 0. This will actually tell the c
 
 Once you are done editing your dada2 sh file, hit Esc and then ":wq" and it should save. You should now see a `<studyname>dada2.sh` file in your directory.
 
-  
+ 
 
 You can now type
 
@@ -120,8 +137,9 @@ You can now type
 which will authorize your sh file (FYI: sh files are the extensions for bash scripts, which is what we just made)
 
   
+**Important**: before you run the next step always make sure you are in the directory where your demux file is in! The only other option is to include the full paths in your slurm script to every file.
 
-And then type:
+Now type:
 
   
 
