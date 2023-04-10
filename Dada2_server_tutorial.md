@@ -65,7 +65,22 @@ Now type:
 
   
 You can now use qiime commands and now you can import your study as we always have done. See the qiime2 walk through tutorial if you need help with this.
+The only difference will be downloading the qzv file to see where to trim. See below on how to download that.
 
+## Using Cyberduck to download the demux.qzv file
+
+Because you are on a server, you cannot simply open your File Explorer to find the qzv file. You need to downlaod it from the server onto your computer.
+Officiial link: https://cyberduck.io
+Once launched. You will want to start a new Bookmark (Bookmark tab on Windows is at the top of the app, on Mac it will be at the top left corner of your screen).
+
+
+From the drop down menu select SFTP. This is the SSH File Transfer Protocol, the same protocol you used to login to quest. 
+**Nickname** is whatever you want
+**Server** : quest.northwestern.edu
+**Username** : NetID
+**Password** : NetID password
+
+Once made you can now enter your Bookmark tabs and double click on this to login to Quest. From there, find your demuxfile, left click and download, or hit `Alt + DownArrow`. The file should be in your download folder now, and ready to view on Qiime2 View.
   
 
 ## Step 6: Run dada2
