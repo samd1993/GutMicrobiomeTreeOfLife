@@ -80,7 +80,7 @@ From the drop down menu select SFTP. This is the SSH File Transfer Protocol, the
 **Username** : NetID
 **Password** : NetID password
 
-![ExampleSFTP]([http://url/to/img.png](https://user-images.githubusercontent.com/22188081/230944027-404d5b8b-0063-43fd-a659-6fba10d6b12e.png))
+![ExampleSFTP]([https://user-images.githubusercontent.com/22188081/230944027-404d5b8b-0063-43fd-a659-6fba10d6b12e.png)
 
 Once made you can now enter your Bookmark tabs and double click on this to login to Quest. From there, find your demuxfile, left click and download, or hit `Alt + DownArrow`. The file should be in your download folder now, and ready to view on Qiime2 View.
   
