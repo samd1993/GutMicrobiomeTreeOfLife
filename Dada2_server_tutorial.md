@@ -74,10 +74,14 @@ Officiial link: https://cyberduck.io
 Once launched. You will want to start a new Bookmark (Bookmark tab on Windows is at the top of the app, on Mac it will be at the top left corner of your screen).
 
 
-From the drop down menu select SFTP. This is the SSH File Transfer Protocol, the same protocol you used to login to quest. 
+From the drop down menu select SFTP. This is the SSH File Transfer Protocol, the same protocol you used to login to quest.
+
 **Nickname** is whatever you want
+
 **Server** : quest.northwestern.edu
+
 **Username** : NetID
+
 **Password** : NetID password
 
 ![ExampleSFTP](https://user-images.githubusercontent.com/22188081/230944027-404d5b8b-0063-43fd-a659-6fba10d6b12e.png)
