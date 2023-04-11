@@ -15,14 +15,14 @@ You will notice you are in your $HOME directory. To access our project folder yo
 
 `cd /projects/p31966/`
 
-If you ever want to return to your home directory just type `cd ~/` the ~ stands for root directory. But because your $HOME directory only has 20Gb you will want to always work inside of our p31966 folder.
-
 Because there is 15 of us, make your own project directory named after yourself (I do "sdegregori" for example).
 
 `mkdir <yourname>
 cd <yourname>`
 
-You will always work inside of here. 
+All of your output files will end up here. 
+But the actual qiime commands you should run in your $HOME directory. So now go back to home with `cd ~`. The ~ always takes you back to home directory. 
+
 
 ## Step 2: Download fastq.gz files
 Make a directory for your next study as you usually do such as `mkdir arizza`. Then `cd arizza` to move into your study directory. Next, go to SRA explorer and enter the accession number of your study and copy and paste the curl commands into your terminal. These should download into your directory.
@@ -41,11 +41,6 @@ Before you do however, it is bad etiquette to run any kind of computation in the
 
 where the account is our account quest has given us. Time is 2 hours and the memory is 4 gigs. If you want more than 4 hours then change --partition to `--parition=normal` instead of short.
 
-**Important**: If at any point in this process you srun or module loading takes you back to your home directory you will have to reenter:
-
-`cd /projects/p31966/<yourname>`
-
-So always check you are where you belong by typing `pwd`
 
 Once your srun has been accepted you can now import your study.
 
@@ -172,3 +167,18 @@ To submit your job. You should now receive an email saying it submitted (this ma
   
 
 Good job! You submitted your first job. If you get another immediate email saying job finished it is likely that your job failed. If you get a job completion email in a couple hours/days then your job will have completed. The cool thing is you can submit multiple jobs which should be much easier than always waiting for dada2 to finish. Sidenote: sometimes SLURM will email you job FAILED after a couple hours/days but really it finished and you should see the output files in your directory. If you don't then the job failed and I would try again but request 48G instead of 24G.
+
+## Final Steps:
+
+Before you move your files to p31966, download your 3 outputs files (demux, table, rep seqs) and upload to sharepoint, plus your metadata.
+
+Then you can move the entire study to p31966.
+First make a study folder in p31966
+
+`mkdir /projects/p31966/<studyname>`
+
+Now move all your study files to the new folder in p31966. Make sure you are outside the study directory in your home folder
+
+`mv <studyname>/* /projects/p31966/<studyname>`
+
+The code above basically will move all file contents of the study you just completed in qiime2 over to p31966
