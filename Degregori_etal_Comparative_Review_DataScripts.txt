@@ -1,0 +1,1385 @@
+#Automating deblur step on all studies
+qiime quality-filter q-score \
+ --i-demux "$filename" \
+ --o-filtered-sequences filtered/filtered-"$filename" \
+ --o-filter-stats filtered/filter-stats-"$filename"
+# Run Qiime2 Deblur with 150bp sequence length
+qiime deblur denoise-16S \
+ --i-demultiplexed-seqs filtered/filtered-"$filename" \
+ --p-trim-length 150 \
+ --p-left-trim-len 0 \
+ --o-representative-sequences filtered/deblur_rep_seqs"$filename" \
+ --o-table filtered/deblur_table_"$filename" \
+ --o-stats filtered/deblur-stats"$filename"
+
+echo "Qiime2 Deblur analysis completed successfully."
+
+#merging table and testing
+qiime feature-table merge \
+--i-tables demux/human/filtered/deblur_table_Chakraborty-acuminatus-paired-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Chakraborty-cembrae-paired-end-demux.qza \
+--i-tables deblurFinal_merged_table9.qza \
+--o-merged-table deblurFinal_merged_table10.qza
+
+--i-tables demux/human/filtered/deblur_table_Chakraborty-duplicatus-paired-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Chakraborty-sexdentatus-paired-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Chakraborty-typographus-paired-end-demux.qza \
+
+--i-tables demux/human/filtered/deblur_table_Tang-Crocodilurus-paired-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Wasimuddin-paired-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Wei-trituberculatus-single-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Weng-single-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Cock-paired-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Hakim-purpuratus-paired-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Harer-single-demux.qza \
+
+--i-tables demux/human/filtered/deblur_table_Hoang-paired-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Lim-paired-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Li-noctilio-paired-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Liu-dorsalis-paired-end-demux.qza \
+
+
+--i-tables demux/human/filtered/deblur_table_Zhou-single-end-demux.qza \
+
+
+--i-tables demux/human/filtered/deblur_table_Chakraborty-poligraphus-paired-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Jeon-paired-end-demux.qza \
+
+#these worked once?
+--i-tables demux/human/filtered/deblur_table_Pires-paired-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Plummer-paired-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Sapkota-flavipes-paired-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Sehli-paired-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Shi1-paired-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Shi2-paired-end-demux.qza \
+--i-tables demux/human/filtered/deblur_table_Silva-paired-end-demux.qza \
+
+#this works after redo:
+demux/humandump/deblur_table_Chakraborty-poligraphus2.qza
+
+qiime quality-filter q-score \
+    --i-demux demux/humandump/Chakraborty-poligraphus-paired-end-demux.qza \
+    --o-filtered-sequences demux/humandump/filtered-Chakraborty-poligraphus2.qza \
+    --o-filter-stats demux/humandump/filter-stats-Chakraborty-poligraphus2.qza
+
+qiime deblur denoise-16S \
+    --i-demultiplexed-seqs demux/humandump/filtered-Chakraborty-poligraphus2.qza \
+    --p-trim-length 150 \
+    --p-left-trim-len 0 \
+    --o-representative-sequences demux/humandump/deblur_rep_seqs_Chakraborty-poligraphus2.qza \
+    --o-table demux/humandump/deblur_table_Chakraborty-poligraphus2.qza \
+    --o-stats demux/humandump/deblur-stats-Chakraborty-poligraphus2.qza \
+    --p-jobs-to-start 64
+
+qiime feature-table merge \
+--i-tables demux/humandump/filtered/deblur_table_Chakraborty-acuminatus-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Chakraborty-cembrae-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Chakraborty-duplicatus-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Chakraborty-poligraphus-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Chakraborty-sexdentatus-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Chakraborty-typographus-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Cock-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Hakim-purpuratus-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Harer-single-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Hoang-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Jeon-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Lim-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Li-noctilio-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Liu-dorsalis-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Pires-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Plummer-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Sapkota-flavipes-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Sehli-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Shi1-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Shi2-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Silva-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Wasimuddin-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Wei-trituberculatus-single-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Weng-single-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Zhou-single-end-demux.qza \
+--i-tables deblurFinal_merged_table9.qza \
+--o-merged-table deblurFinal_merged_table10.qza 
+
+--i-tables demux/humandump/filtered/deblur_table_Tang-Crocodilurus-paired-end-demux.qza \
+--i-tables demux/humandump/filtered/deblur_table_Chakraborty-poligraphus2.qza \
+
+  qiime feature-table summarize \
+ --i-table deblurFinal_merged_table10.qza \
+ --m-sample-metadata-file newmetadata_GMTOL_test.txt \
+--o-visualization deblurFinal_merged_table10.qzv \
+ --verbose
+
+ #combining seqs
+#Merging studies together
+qiime feature-table merge-seqs \
+--i-data deblur_rep-seqs_abdelrhman-paired-end-demux.qza \
+--i-data deblur_rep-seqs_angelakis-paired-end-demux.qza \
+--i-data deblur_rep-seqs_bai-paired-end-demux.qza \
+--i-data deblur_rep-seqs_baldo-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Barrionuevo-single-end-demux.qza \
+--i-data deblur_rep-seqs_berlow-paired-end-demux.qza \
+--i-data deblur_rep_seqs_budd.qza \
+--i-data deblur_rep-seqs_bunker-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Burke-single-end-demux.qza \
+--i-data deblur_rep-seqs_campbell-paired-end-demux.qza \
+--i-data deblur_rep-seqs_chaerinkim-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Chakraborty-acuminatus-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Chakraborty-cembrae-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Chakraborty-duplicatus-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Chakraborty-poligraphus-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Chakraborty-sexdentatus-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Chakraborty-typographus-paired-end-demux.qza \
+--i-data deblur_rep-seqs_chen-demux.qza \
+--i-data deblur_rep-seqs_chen_single_demux.qza \
+--i-data deblur_rep-seqs_Chouaia-single-end-demux.qza \
+--i-data deblur_rep-seqs_cini-paired-end-demux.qza \
+--i-data deblur_rep-seqs_clever-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Cock-paired-end-demux.qza \
+--i-data deblur_rep-seqs_cornejo-single-end-demux.qza \
+--i-data deblur_rep-seqs_danckert-paired-end-demux.qza \
+--i-data deblur_rep-seqs_demux-bornbusch-paired.qza \
+--i-data deblur_rep-seqs_demux-gonzález-serrano-single.qza \
+--i-data deblur_rep-seqs_demux-wang-single.qza \
+--i-data deblur_rep_seqs_dewar-rep-seqs.qza \
+--i-data deblur_repseqs_dewar-rep-seqs.qza \
+--i-data deblur_rep-seqs_eliades-paired-end-demux.qza \
+--i-data deblur_rep-seqs_fontainebf-paired-end-demux.qza \
+--i-data deblur_rep-seqs_fontainegf-paired-end-demux.qza \
+--i-data deblur_rep_seqsFontaine-single-end-demux.qza \
+--i-data deblur_rep-seqs_gaulke-single-end-demux.qza \
+--i-data deblur_rep-seqs_gillingham-paired-end-demux.qza \
+--i-data deblur_repseqs_gobet.qza \
+--i-data deblur_rep-seqs_gong-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Griffin-paired-end-demux.qza \
+--i-data deblur_rep-seqs_guerrero_pairend_demux.qza \
+--i-data deblur_rep-seqs_haiyingzhong-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Hakim-purpuratus-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Harer-single-demux.qza \
+--i-data deblur_rep-seqs_he-paired-end-demux.qza \
+--i-data deblur_rep-seqs_herder-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Hoang-paired-end-demux.qza \
+--i-data deblur_rep-seqs_holt-paired-end-demux.qza \
+--i-data deblur_rep_seqsHu-b-single-end-demux.qza \
+--i-data deblur_rep-seqs_Huyben-paired-end-demux.qza \
+--i-data deblur_rep-seqs_ibanez-single-end-demux.qza \
+--i-data deblur_rep-seqs_iwatsuki-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Jeon-paired-end-demux.qza \
+--i-data deblur_rep-seqs_jiang-single-end-demux.qza \
+--i-data deblur_rep-seqs_jones-single-end-demux.qza \
+--i-data deblur_rep-seqs_kaczmarczyk-paired-end-demux.qza \
+--i-data deblur_rep-seqs_keiz-paired-end-demux.qza \
+--i-data deblur_rep-seqs_kesnerova-paired-end-demux.qza \
+--i-data deblur_rep-seqs_klammsteiner-paired-end-demux.qza \
+--i-data deblur_rep-seqs_lavy-paired-end-demux.qza \
+--i-data deblur_rep-seqs_lawrence-paired-end-demux.qza \
+--i-data deblur_rep-seqs_lawson-paired-end-demux.qza \
+--i-data deblur_rep-seqs_le-paired-end-demux.qza \
+--i-data deblur_rep-seqs_lianchen-paired-end-demux.qza \
+--i-data deblur_rep-seqs_lihongzhou-single-end-demux.qza \
+--i-data deblur_rep-seqs_Lim-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Li-noctilio-paired-end-demux.qza \
+--i-data deblur_rep-seqs_linzhangII-paired-end-demux.qza \
+--i-data deblur_rep-seqs_linzhang-paired-end-demux.qza \
+--i-data deblur_rep-seqs_li-paired-end-demux.qza \
+--i-data deblur_rep_seqsli-scallop-single-end-demux.qza \
+--i-data deblur_rep-seqs_li-single-end-demux.qza \
+--i-data deblur_rep-seqs_Liu-dorsalis-paired-end-demux.qza \
+--i-data deblur_rep-seqs_liu_pairend_demux.qza \
+--i-data deblur_rep-seqs_Liu-Tachypleus-tridentatus-paired-end-demux.qza \
+--i-data deblur_rep-seqs_lyu_pairend_demux.qza \
+--i-data deblur_rep-seqs_magagnoli_pairend_demux.qza \
+--i-data deblur_rep_seqsmaltseva-gastopoda.qza \
+--i-data deblur_rep-seqs_Manor-paired-end-demux.qza \
+--i-data deblur_rep-seqs_ma-paired-end-demux.qza \
+--i-data deblur_rep-seqs_mason-paired-end-demux.qza \
+--i-data deblur_rep-seqs_mathai-paired-end-demux.qza \
+--i-data deblur_rep-seqs_mays_pairend_demux.qza \
+--i-data deblur_rep-seqs_McCauley-paired-end-demux.qza \
+--i-data deblur_rep-seqs_meriggi-paired-end-demux.qza \
+--i-data deblur_rep-seqs_miret-paired-end-demux.qza \
+--i-data deblur_rep-seqs_moeller_pairend_demux.qza \
+--i-data deblur_rep-seqs_monteiro-demux.qza \
+--i-data deblur_rep-seqs_montoya-single-end-demux.qza \
+--i-data deblur_rep-seqs_muhammad_single_demux.qza \
+--i-data deblur_rep-seqs_muturi-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Nielsen-paired-end-demux.qza \
+--i-data deblur_rep-seqs_ning-paired-end-demux.qza \
+--i-data deblur_rep-seqs_nones-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Nyman-paired-end-demux.qza \
+--i-data deblur_rep-seqs_ojha-single-end-demux.qza \
+--i-data deblur_rep-seqs_pagan-jimenez-single-end-demux.qza \
+--i-data deblur_rep-seqs_paired-end-demux-haji.qza \
+--i-data deblur_rep-seqs_paired-end-demux-kang.qza \
+--i-data deblur_rep-seqs_paired-end-demux-phalnikar.qza \
+--i-data deblur_rep-seqs_paired-end-demux-pierce.qza \
+--i-data deblur_rep-seqs_paired-end-demux-rohrer.qza \
+--i-data deblur_rep-seqs_paired-end-demux-rubanov.qza \
+--i-data deblur_rep-seqs_paired-end-demux-wei.qza \
+--i-data deblur_rep-seqs_pan-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Pardesi-paired-end-demux.qza \
+--i-data deblur_rep-seqs_parris-demux.qza \
+--i-data deblur_rep-seqs_Perry-paired-end-demux.qza \
+--i-data deblur_rep-seqs_pierce-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Pires-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Plummer-paired-end-demux.qza \
+--i-data deblur_rep-seqs_pratte-demux.qza \
+--i-data deblur_rep-seqs_Rothenberg-paired-end-demux.qza \
+--i-data deblur_rep-seqs_santos-single-end-demux.qza \
+--i-data deblur_rep-seqs_Sapkota-flavipes-paired-end-demux.qza \
+--i-data deblur_rep-seqs_sapkota-paired-end-demux.qza \
+--i-data deblur_rep-seqs_scalvenzi-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Schaan-single-end-demux.qza \
+--i-data deblur_rep-seqs_schmidt-paired-end-demux.qza \
+--i-data deblur_rep-seqs_segers-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Sehli-paired-end-demux.qza \
+--i-data deblur_rep-seqs_serrano_single_demux.qza \
+--i-data deblur_rep-seqs_sevellec-paired-end-demux.qza \
+--i-data deblur_rep-seqs_shelomi_pairend_demux.qza \
+--i-data deblur_rep-seqs_Shi1-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Shi2-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Silva-paired-end-demux.qza \
+--i-data deblur_rep-seqs_single-end-demux-campos.qza \
+--i-data deblur_rep-seqs_single-end-demux-ooi.qza \
+--i-data deblur_rep-seqs_single-end-demux-wasimuddin.qza \
+--i-data deblur_rep-seqs_skrodenyte_single_end_demux.qza \
+--i-data deblur_rep-seqs_Smith-demux.qza \
+--i-data deblur_rep-seqs_smits_single_end_demux.qza \
+--i-data deblur_rep-seqs_stoffel-demux.qza \
+--i-data deblur_rep-seqs_suarez-moo-paired-end-demux.qza \
+--i-data deblur_rep-seqs_suenami-paired-end-demux.qza \
+--i-data deblur_rep-seqs_sylvain-single-end-demux.qza \
+--i-data deblur_rep-seqs_Tang-Crocodilurus-paired-end-demux.qza \
+--i-data deblur_rep-seqs_tang-demux.qza \
+--i-data deblur_rep-seqs_tang-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Terova-paired-end-demux.qza \
+--i-data deblur_rep_seqs_tinker-mantis.qza \
+--i-data deblur_rep-seqs_tong-single-demux.qza \
+--i-data deblur_rep-seqs_trevelline-single-end-demux.qza \
+--i-data deblur_rep-seqs_vasco-single-end-demux.qza \
+--i-data deblur_rep-seqs_vasemagi-paired-end-demux.qza \
+--i-data deblur_rep-seqs_vejar_paired_end_demux.qza \
+--i-data deblur_rep-seqs_vernier-demux.qza \
+--i-data deblur_rep-seqs_videvall-single-end-demux.qza \
+--i-data deblur_rep-seqs_wagener-single-end-demux.qza \
+--i-data deblur_rep-seqs_walker-paired-end-demux.qza \
+--i-data deblur_rep-seqs_walter-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Wang-Ctenopharyngodon-idella-single-end-demux.qza \
+--i-data deblur_rep-seqs_Wang-Haliotis-discus-paired-end-demux.qza \
+--i-data deblur_rep-seqs_wang-paired-end-demux.qza \
+--i-data deblur_rep-seqs_wang_pairend_demux.qza \
+--i-data deblur_rep-seqs_Wasimuddin-paired-end-demux.qza \
+--i-data deblur_rep-seqs_wei-single-end-demux.qza \
+--i-data deblur_rep-seqs_Wei-trituberculatus-single-end-demux.qza \
+--i-data deblur_rep-seqs_Weng-single-end-demux.qza \
+--i-data deblur_rep-seqs_weyrich-single-end-demux.qza \
+--i-data deblur_rep-seqs_wiebler-single-end-demux.qza \
+--i-data deblur_rep-seqs_williams-paired-end-demux.qza \
+--i-data deblur_rep-seqs_wu-single-end-demux.qza \
+--i-data deblur_rep-seqs_xiao-paired-end-demux.qza \
+--i-data deblur_rep-seqs_xiaowenchen-paired-end-demux.qza \
+--i-data deblur_rep-seqs_yanez-montalvo-paired-demux.qza \
+--i-data deblur_rep-seqs_zhang-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Zhang-Xu-paired-end-demux.qza \
+--i-data deblur_rep-seqs_zhirongzhang-paired-end-demux.qza \
+--i-data deblur_rep-seqs_Zhou-single-end-demux.qza \
+--i-data deblur_rep-seqs_zhu-paired-end-demux.qza \
+--i-data deblur_rep-seqs_zoqratt-paired-demux.qza \
+--i-data deblur_rep-seqs_zuo-single-end-demux.qza \
+--i-data ../../../deblur_rep-seqs_zhong-paired-end-demux.qza \
+--o-merged-data GMTOL_merged_repseqs_May28.qza
+
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny GMTOL_rooted_treeMay28.qza \
+  --i-table deblurFinal_merged_table10.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file newmetadata_GMTOL_test.txt \
+  --output-dir core-metrics-results-GMTOL_deblur
+
+     qiime feature-table filter-seqs \
+        --i-data GMTOL_merged_repseqs_May28.qza \
+        --i-table deblurFinal_merged_table10.qza  \
+        --o-filtered-data GMTOL_merged_repseqs_May28f.qza
+
+ qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny GMTOL_rooted_treeMay28f.qza \
+  --i-table deblurFinal_merged_table10.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file newmetadata_GMTOL_test.txt \
+  --output-dir core-metrics-results-GMTOL_deblur
+
+ qiime feature-table filter-samples \
+  --i-table deblurFinal_merged_table10.qza   \
+  --m-metadata-file newmetadata_GMTOL_test.txt \
+  --p-where "[Class] IN ('Reptilia')" \
+  --o-filtered-table Sophia_Reptilia_tableMay30.qza
+
+  qiime feature-table filter-samples \
+  --i-table deblurFinal_merged_table10.qza   \
+  --m-metadata-file newmetadata_GMTOL_test.txt \
+  --p-where "[Class] IN ('Actinopterygii')" \
+  --o-filtered-table Emma_Fish_tableMay30.qza
+
+ qiime feature-table filter-samples \
+  --i-table deblurFinal_merged_table10.qza   \
+  --m-metadata-file newmetadata_GMTOL_test.txt \
+  --p-where "[Class] IN ('Aves')" \
+  --o-filtered-table Emma_Aves_tableMay30.qza 
+
+
+ qiime feature-table filter-samples \
+  --i-table deblurFinal_merged_table10.qza   \
+  --m-metadata-file newmetadata_GMTOL_test.txt \
+  --p-where "[Genus] IN ('Homo')" \
+  --o-filtered-table Noor_Humans_tableMay30.qza 
+
+   qiime feature-table filter-samples \
+  --i-table deblurFinal_merged_table10.qza   \
+  --m-metadata-file newmetadata_GMTOL_test.txt \
+  --p-where "[Class] IN ('Insecta')" \
+  --o-filtered-table Noah_Insecta_tableMay30.qza
+
+
+GMTOL_merged_repseqs_May28.qza
+
+qiime feature-classifier classify-sklearn \
+  --i-classifier ~/Downloads/gg_2022_10_backbone.v4.nb.qza \
+  --i-reads GMTOL_merged_repseqs_May28.qza\
+  --p-n-jobs -1 \
+  --o-classification taxonomy.qza
+
+qiime feature-table merge \
+    --i-tables $(find -name "deblur_table*.qza" | tr '\n'\\ ' ') \
+    --o-merged-table merged_table_Jun2_GMTOL.qza
+
+    qiime tools import \
+    --type 'SampleData[SequencesWithQuality]' \
+    --input-path Pierce-Crassostrea-Virginicamanifest.txt \
+    --output-path Pierce-Crassostrea-single-demux.qza \
+    --input-format SingleEndFastqManifestPhred33V2
+
+qiime quality-filter q-score \
+    --i-demux Pierce-Crassostrea-single-demux.qza \
+    --o-filtered-sequences filtered-Pierce-Crassostrea.qza \
+    --o-filter-stats filter-stats-Pierce-Crassostrea.qza
+
+qiime deblur denoise-16S \
+    --i-demultiplexed-seqs filtered-Pierce-Crassostrea.qza \
+    --p-trim-length 150 \
+    --p-left-trim-len 0 \
+    --o-representative-sequences deblur_rep_seqs_Pierce-Crassostrea.qza \
+    --o-table deblur_table_Pierce-Crassostrea.qza \
+    --o-stats deblur-stats-Pierce-Crassostrea.qza \
+    --p-jobs-to-start 16
+
+    qiime tools import \
+    --type 'SampleData[SequencesWithQuality]' \
+    --input-path TangLizNTmanifest.txt \
+    --output-path TangLizNT-single-demux.qza \
+    --input-format SingleEndFastqManifestPhred33V2
+
+qiime quality-filter q-score \
+    --i-demux TangLizNT-single-demux.qza \
+    --o-filtered-sequences filtered-TangLizNT.qza \
+    --o-filter-stats filter-stats-TangLizNT.qza
+
+qiime deblur denoise-16S \
+    --i-demultiplexed-seqs filtered-TangLizNT.qza \
+    --p-trim-length 150 \
+    --p-left-trim-len 0 \
+    --o-representative-sequences deblur_rep_seqs_TangLizNT.qza \
+    --o-table deblur_table_TangLizNT.qza \
+    --o-stats deblur-stats-TangLizNT.qza \
+    --p-jobs-to-start 16
+
+find -name "deblur_table*.qza" | tr '\n'\\ '\n'
+find -name "deblur_rep*.qza" | tr '\n'\\ '\n'
+
+qiime feature-table merge \
+    --i-tables $(find -name "deblur_table*.qza" | tr '\n'\\ ' ') \
+    --o-merged-table merged_table_Jun2_GMTOL.qza
+
+qiime feature-table merge-seqs \
+    --i-data $(find -name "deblur_rep*.qza" | tr '\n'\\ ' ') \
+    --o-merged-data merged_repseqs_Jun2_GMTOL.qza
+
+qiime feature-table summarize \
+--i-table merged_table_Jun2_GMTOL.qza \
+--m-sample-metadata-file newmetadata_GMTOL_test.txt \
+--o-visualization merged_table_Jun2_GMTOL.qzv 
+
+
+qiime feature-classifier classify-sklearn \
+  --i-classifier 2022.10.backbone.full-length.nb.qza \
+  --i-reads merged_repseqs_Jun2_GMTOL.qza \
+  --o-classification merged_GMTOL_taxonomy.qza \
+  --p-n-jobs 16
+
+qiime metadata tabulate \
+  --m-input-file merged_GMTOL_taxonomy.qza \
+  --o-visualization merged_GMTOL_taxonomy.qzv
+
+qiime feature-table group \
+--i-table merged_table_Jun2_GMTOL.qza \
+--p-axis sample \
+--m-metadata-file June2metadata_GMTOL_test.txt \
+--m-metadata-column Class \
+--p-mode sum \
+--o-grouped-table merged_table_Jun2_GMTOL_groupedClass.qza
+
+qiime taxa barplot \
+  --i-table merged_table_Jun2_GMTOL_groupedClass.qza \
+  --i-taxonomy merged_GMTOL_taxonomy.qza \
+  --o-visualization taxabarplot_Jun2_GMTOL_groupedClass.qzv
+
+###Making merged tables for students
+
+
+qiime feature-table filter-samples \
+  --i-table merged_table_Jun2_GMTOL.qza \
+  --m-metadata-file June2metadata_GMTOL_test.txt \
+  --p-where "[Class] IN ('Reptilia')" \
+  --o-filtered-table Sophia_Reptilia_table2.qza
+
+  qiime feature-table filter-samples \
+  --i-table merged_table_Jun2_GMTOL.qza \
+  --m-metadata-file June2metadata_GMTOL_test.txt \
+  --p-where "[Class] IN ('Actinopterygii' )" \
+  --o-filtered-table Emily_Fish_table2.qza
+
+ qiime feature-table filter-samples \
+  --i-table merged_table_Jun2_GMTOL.qza \
+  --m-metadata-file June2metadata_GMTOL_test.txt \
+  --p-where "[Class] IN ('Mammalia' )" \
+  --o-filtered-table Mammal_table2.qza
+
+   qiime feature-table filter-samples \
+  --i-table merged_table_Jun2_GMTOL.qza \
+  --m-metadata-file June2metadata_GMTOL_test.txt \
+  --p-where "[Class] IN ('Aves' )" \
+  --o-filtered-table Emma_Aves_table2.qza
+
+
+ qiime feature-table filter-samples \
+  --i-table merged_table_Jun2_GMTOL.qza \
+  --m-metadata-file June2metadata_GMTOL_test.txt \
+  --p-where "[Class] IN ('Insecta' )" \
+  --o-filtered-table Noah_Insects_table2.qza
+
+#Merging everything together from both datasets 
+#heres one repseq merge
+qiime feature-table merge-seqs \
+ --i-data dietrich-rep-seq-dada2.qza 	\
+ --i-data dong-rep-seq-dada2.qza 	\
+ --i-data fontaine-rep-seqs-dada2.qza 	\
+ --i-data hernandez-rep-seqs-dada2.qza 	\
+ --i-data jiang-rep-seqs-dada2.qza 	\
+ --i-data keenan-rep-seqs-dada2.qza 	\
+ --i-data price-rep-seqs-dada2.qza 	\
+ --i-data sandri-rep-seqs-dada2.qza 	\
+ --i-data wang-rep-seqs-dada2.qza 	\
+ --i-data zhou-rep-seqs-dada2.qza 	\
+ --o-merged-data TOLrepseqs-batch2.qza
+
+#dont use fontaine jiang wang zhou
+
+#and another:
+
+qiime feature-table merge-seqs \
+    --i-data rep-seqs-dada-arizza.qza \
+    --i-data rep-seqs-dada-colston.qza \
+    --i-data rep-seqs-dada-delsuc.qza \
+    --i-data rep-seqs-dada-erwin.qza \
+    --i-data rep-seqs-dada-hakim.qza \
+    --i-data rep-seqs-dada-kwong.qza \
+    --i-data rep-seqs-dada-murphy.qza \
+    --i-data rep-seqs-dada-Nasvall.qza \
+    --i-data rep-seqs-dada-perofsky.qza \
+    --i-data rep-seqs-dada-zoqratt.qza \
+    --i-data rep-seqs-dada-parata.qza \
+    --i-data rep-seqs-dada-sanders.qza \
+    --i-data rep-seqs-dada-schwob.qza \
+    --i-data rep-seqs-dada-suenami.qza \
+    --i-data rep-seqs-dada-visnovska.qza \
+    --i-data rep-seqs-dada-wang.qza \
+    --o-merged-data TOLrep-seqs.qza
+
+#studies that are found in GMTOL metadata:
+# Hakim zoqratt suenami wang
+
+
+#heres the table merge:
+
+qiime feature-table merge \
+ --i-tables  dietrich-table-dada2.qza \
+ --i-tables  dong-table-dada2.qza \
+ --i-tables  fontaine-table-dada2.qza \
+ --i-tables  hernandez-table-dada2.qza \
+ --i-tables  jiang-table-dada2.qza \
+ --i-tables  keenan-table-dada2.qza \
+ --i-tables  price-table-dada2.qza \
+ --i-tables  sandri-table-dada2.qza \
+ --i-tables  table-dada3-arizza.qza \
+ --i-tables  table-dada3-colston.qza \
+ --i-tables  table-dada3-delsuc.qza \
+ --i-tables  table-dada3-erwin.qza \
+ --i-tables  table-dada3-hakim.qza \
+ --i-tables  table-dada3-kwong.qza \
+ --i-tables  table-dada3-murphy.qza \
+ --i-tables  table-dada3-Nasvall.qza \
+ --i-tables  table-dada3-parata.qza \
+ --i-tables  table-dada3-perofsky.qza \
+ --i-tables  table-dada3-rojas.qza \
+ --i-tables  table-dada3-sanders.qza \
+ --i-tables  table-dada3-schwob.qza \
+ --i-tables  table-dada3-suenami.qza \
+ --i-tables  table-dada3-visnovska.qza \
+ --i-tables  table-dada3-wang.qza \
+ --i-tables  table-dada3-zoqratt.qza \
+ --i-tables  wang-table-dada2.qza \
+ --i-tables  zhou-table-dada2.qza \
+ --o-merged-table allmerged-table2.qza
+
+qiime feature-table merge \
+ --i-tables  table55205_NZ.qza \
+ --i-tables  table55205.qza \
+ --i-tables  table55205_S2.qza \
+ --i-tables  tableGilbert001.qza \
+ --i-tables  tableUndetermined_S0.qza \
+ --o-merged-table allmerged_songetal_table.qza
+
+ qiime feature-table merge \
+ --i-tables   allTOLmerged-table2mf.qza  \
+ --i-tables  songetal/16S/allmerged_songetal_tablef.qza \
+ --o-merged-table allTOLsong_table.qza
+
+ qiime feature-table merge-seqs \
+ --i-data songetal/16S/rep-seqs-dada255205_NZ.qza 	\
+ --i-data songetal/16S/rep-seqs-dadaUndetermined_S0.qza 	\
+ --i-data songetal/16S/rep-seqs-dada255205.qza	\
+ --i-data songetal/16S/rep-seqs-Gilbert001.qza 	\
+ --i-data songetal/16S/rep-seqs-dada255205_S2.qza 	\
+ --i-data allTOLmerged-repseqs.qza 	\
+ --o-merged-data allTOLsong_repseqs.qza
+
+ #GOING to just merge the final repseq and table frong the song stuff first with the GMTOL before trying to do a whole new deblur run
+
+    qiime feature-table merge \
+    --i-tables  allTOLsong_table.qza \
+    --i-tables  merged_table_Jun2_GMTOL.qza \
+    --o-merged-table GMTOLsong_table.qza
+
+qiime feature-table merge-seqs \
+--i-data  allTOLsong_repseqs.qza \
+--i-data  merged_repseqs_Jun2_GMTOL.qza \
+--o-merged-data GMTOLsong_repseqs.qza
+
+#making tree now
+#not enough RAM..need to filter table out
+
+qiime feature-table summarize \
+  --i-table merged_table_Jun2_GMTOL.qza \
+  --m-sample-metadata-file Jul17metadataMerged.txt \
+  --o-visualization merged_table_Jun2_GMTOL.qzv
+
+qiime feature-table filter-seqs \
+    --i-data GMTOLsong_repseqs.qza \
+    --i-table GMTOLsong_table.qza \
+    --o-filtered-data GMTOLrepseqf.qza
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsong_table.qza \
+  --m-metadata-file samples2loseJul17.txt \
+  --p-exclude-ids \
+  --o-filtered-table GMTOLsong_tablef.qza
+
+  qiime feature-table filter-seqs \
+    --i-data GMTOLsong_repseqs.qza \
+    --i-table GMTOLsong_tablef.qza \
+    --o-filtered-data GMTOLrepseqf.qza
+
+
+
+#trying subsample alone first
+
+qiime feature-table subsample \
+        --i-table "GMTOLsong_table.qza" \
+        --m-metadata-file "Jul17metadataMerged.txt" \
+        --p-metadata-column "Species" \
+        --p-min-frequency 1 \
+        --p-max-frequency "20" \
+        --p-with-replacement \
+        --p-exact \
+        --p-n-jobs 4 \
+        --o-sampled-table "GMTOL_song_table20.qza"
+
+#not working at all so I did it in R
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsong_table.qza \
+  --m-metadata-file subsample/N1samples2keep.tsv \
+  --o-filtered-table GMTOLsong_tableN1.qza
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsong_table.qza \
+  --m-metadata-file subsample/N5samples2keep.tsv \
+  --o-filtered-table GMTOLsong_tableN5.qza
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsong_table.qza \
+  --m-metadata-file subsample/N20samples2keep.tsv \
+  --o-filtered-table GMTOLsong_tableN20.qza
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsong_table.qza \
+  --m-metadata-file subsample/N30samples2keep.tsv \
+  --o-filtered-table GMTOLsong_tableN30.qza
+
+  qiime feature-table filter-seqs \
+    --i-data GMTOLsong_repseqs.qza \
+    --i-table subsample/GMTOLsong_tableN1.qza \
+    --o-filtered-data subsample/GMTOL_repseqsN1.qza
+
+  qiime feature-table filter-seqs \
+    --i-data GMTOLsong_repseqs.qza \
+    --i-table subsample/GMTOLsong_tableN5.qza \
+    --o-filtered-data subsample/GMTOL_repseqsN5.qza
+
+  qiime feature-table filter-seqs \
+    --i-data GMTOLsong_repseqs.qza \
+    --i-table subsample/GMTOLsong_tableN20.qza \
+    --o-filtered-data subsample/GMTOL_repseqsN20.qza
+
+GMTOL_repseqsN1.qza      N20metadataGMTOLsong.tsv
+GMTOL_repseqsN20.qza     N20samples2keep.tsv
+GMTOL_repseqsN5.qza      N30metadataGMTOLsong.tsv
+GMTOLsong_tableN1.qza    N30samples2keep.tsv
+GMTOLsong_tableN20.qza   N5metadataGMTOLsong.tsv
+GMTOLsong_tableN30.qza   N5samples2keep.tsv
+GMTOLsong_tableN5.qza    treeN1.sh
+N1metadataGMTOLsong.tsv  tree.sh
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny GMTOLsong_rooted_treeN1.qza \
+  --i-table GMTOLsong_tableN1.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file N1metadataGMTOLsong.tsv \
+  --output-dir core-metrics-results-GMTOLsongN1
+
+
+   qiime tools export --input-path GMTOLsong_tableN30.qza --output-path ./  
+  biom convert -i feature-table.biom -o GMTOLsong_tableN30.tsv --to-tsv 
+
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny GMTOLsong_rooted_treef.qza \
+  --i-table GMTOLsong_tablef.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file Jul17metadataMerged.txt \
+  --output-dir core-metrics-results-GMTOLsongfJul17
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny GMTOLsong_rooted_treeN5.qza \
+  --i-table GMTOLsong_tableN5.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file N5metadataGMTOLsong.tsv \
+  --output-dir core-metrics-results-GMTOLsongN5
+
+
+qiime diversity alpha-rarefaction \
+--i-table GMTOLsong_tableN1.qza \
+--i-phylogeny GMTOLsong_rooted_treeN1.qza \
+--p-max-depth 10000 \
+--m-metadata-file N1metadataGMTOLsong.tsv \
+--o-visualization alpha-rarefactionN1_10k.qzv
+
+
+qiime diversity alpha-rarefaction \
+--i-table GMTOLsong_tableN5.qza \
+--i-phylogeny GMTOLsong_rooted_treeN5.qza \
+--p-max-depth 10000 \
+--m-metadata-file N5metadataGMTOLsong.tsv \
+--o-visualization alpha-rarefactionN5_10k.qzv
+
+
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ../GMTOLsong_rooted_treef.qza \
+  --i-table GMTOLsong_tableN20.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file N20metadataGMTOLsong.tsv \
+  --output-dir core-metrics-results-GMTOLsongN20
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ../GMTOLsong_rooted_treef.qza \
+  --i-table GMTOLsong_tableN30.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file N30metadataGMTOLsong.tsv \
+  --output-dir core-metrics-results-GMTOLsongN30
+
+
+#trying just GMTOl solo now
+qiime feature-table filter-samples \
+  --i-table merged_table_Jun2_GMTOL.qza \
+  --m-metadata-file ../GMTOLsubsample/N1samples2keepGsolo.tsv \
+  --o-filtered-table ../GMTOLsubsample/GMTOLsolo_tableN1.qza
+
+qiime feature-table filter-samples \
+  --i-table merged_table_Jun2_GMTOL.qza \
+  --m-metadata-file ../GMTOLsubsample/N5samples2keepGsolo.tsv \
+  --o-filtered-table ../GMTOLsubsample/GMTOLsolo_tableN5.qza
+
+qiime feature-table filter-samples \
+  --i-table merged_table_Jun2_GMTOL.qza \
+  --m-metadata-file ../GMTOLsubsample/N20samples2keepGsolo.tsv \
+  --o-filtered-table ../GMTOLsubsample/GMTOLsolo_tableN20.qza
+
+qiime feature-table filter-samples \
+  --i-table merged_table_Jun2_GMTOL.qza \
+  --m-metadata-file subsample/N30samples2keep.tsv \
+  --o-filtered-table ../GMTOLsubsample/GMTOLsolo_tableN30.qza
+
+qiime diversity alpha-rarefaction \
+--i-table GMTOLsubsample/GMTOLsolo_tableN1.qza \
+--i-phylogeny Jun2_GMTOL_rooted_tree.qza \
+--p-max-depth 6000 \
+--m-metadata-file GMTOLsubsample/N1metadataGMTOLsolo.tsv \
+--o-visualization GMTOLsubsample/alpha-rarefactionN1solo_6k.qzv
+
+  qiime diversity alpha-rarefaction \
+--i-table GMTOLsubsample/GMTOLsolo_tableN5.qza \
+--i-phylogeny Jun2_GMTOL_rooted_tree.qza \
+--p-max-depth 6000 \
+--m-metadata-file GMTOLsubsample/N5metadataGMTOLsolo.tsv \
+--o-visualization GMTOLsubsample/alpha-rarefactionN5solo_6k.qzv
+
+  qiime diversity alpha-rarefaction \
+--i-table GMTOLsubsample/GMTOLsolo_tableN20.qza \
+--i-phylogeny Jun2_GMTOL_rooted_tree.qza \
+--p-max-depth 6000 \
+--m-metadata-file GMTOLsubsample/N20metadataGMTOLsolo.tsv \
+--o-visualization GMTOLsubsample/alpha-rarefactionN20solo_6k.qzv
+
+  qiime diversity alpha-rarefaction \
+--i-table GMTOLsubsample/GMTOLsolo_tableN30.qza \
+--i-phylogeny Jun2_GMTOL_rooted_tree.qza \
+--p-max-depth 6000 \
+--m-metadata-file GMTOLsubsample/N30metadataGMTOLsolo.tsv \
+--o-visualization GMTOLsubsample/alpha-rarefactionN30solo_6k.qzv
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny Jun2_GMTOL_rooted_tree.qza \
+  --i-table GMTOLsubsample/GMTOLsolo_tableN1.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file GMTOLsubsample/N1metadataGMTOLsolo.tsv \
+  --output-dir core-metrics-results-GMTOLsoloN1
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny Jun2_GMTOL_rooted_tree.qza \
+  --i-table GMTOLsubsample/GMTOLsolo_tableN5.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file GMTOLsubsample/N5metadataGMTOLsolo.tsv \
+  --output-dir core-metrics-results-GMTOLsoloN5
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny Jun2_GMTOL_rooted_tree.qza \
+  --i-table GMTOLsubsample/GMTOLsolo_tableN20.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file GMTOLsubsample/N20metadataGMTOLsolo.tsv \
+  --output-dir core-metrics-results-GMTOLsoloN20
+
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny Jun2_GMTOL_rooted_tree.qza \
+  --i-table GMTOLsubsample/GMTOLsolo_tableN30.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file GMTOLsubsample/N30metadataGMTOLsolo.tsv \
+  --output-dir GMTOLsubsample/core-metrics-results-GMTOLsoloN30
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsong_tablef.qza \
+ --m-metadata-file Jul17metadataMerged.txt \
+  --p-where "Genus='Homo'" \
+  --o-filtered-table GMTOLsongHuman_tablef.qza
+
+qiime feature-table summarize \
+    --i-table GMTOLsongHuman_tablef.qza \
+    --m-sample-metadata-file Jul26metadataGMTOLsong.txt \
+    --o-visualization GMTOLsongHuman_tablef.qzv
+
+qiime feature-classifier classify-sklearn \
+  --i-classifier 2022.10.backbone.full-length.nb.qza \
+  --p-n-jobs 64 \
+  --i-reads GMTOLsong_repseqs.qza \
+  --o-classification GMTOLsong_taxonomy.qza
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsong_tablef.qza \
+ --m-metadata-file Jul17metadataMerged.txt \
+  --p-where "Class='Aves'" \
+  --o-filtered-table GMTOLsongBirdf.qza
+
+#filtering by primer
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsolo_tableN1.qza \
+ --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --p-where "Primer='V3-V4'" \
+  --o-filtered-table GMTOLsolo_tableN1_V3V4.qza
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsolo_tableN1.qza \
+ --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --p-where "Primer='V4'" \
+  --o-filtered-table GMTOLsolo_tableN1_V4.qza
+
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsolo_tableN5.qza \
+ --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --p-where "Primer='V3-V4'" \
+  --o-filtered-table GMTOLsolo_tableN5_V3V4.qza
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsolo_tableN5.qza \
+ --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --p-where "Primer='V4'" \
+  --o-filtered-table GMTOLsolo_tableN5_V4.qza
+
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsolo_tableN20.qza \
+ --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --p-where "Primer='V3-V4'" \
+  --o-filtered-table GMTOLsolo_tableN20_V3V4.qza
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsolo_tableN20.qza \
+ --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --p-where "Primer='V4'" \
+  --o-filtered-table GMTOLsolo_tableN20_V4.qza
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ../Merged/GMTOLsong_rooted_treef.qza \
+  --i-table GMTOLsolo_tableN1_V3V4.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --output-dir core-metrics-results-GMTOLsoloN1_V3V4
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ../Merged/GMTOLsong_rooted_treef.qza \
+  --i-table GMTOLsolo_tableN1_V4.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --output-dir core-metrics-results-GMTOLsoloN1_V4
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ../Merged/GMTOLsong_rooted_treef.qza \
+  --i-table GMTOLsolo_tableN5_V3V4.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --output-dir core-metrics-results-GMTOLsoloN5_V3V4
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ../Merged/GMTOLsong_rooted_treef.qza \
+  --i-table GMTOLsolo_tableN5_V4.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --output-dir core-metrics-results-GMTOLsoloN5_V4
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ../Merged/GMTOLsong_rooted_treef.qza \
+  --i-table GMTOLsolo_tableN20_V3V4.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --output-dir core-metrics-results-GMTOLsoloN20_V3V4
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ../Merged/GMTOLsong_rooted_treef.qza \
+  --i-table GMTOLsolo_tableN20_V4.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --output-dir core-metrics-results-GMTOLsoloN20_V4
+
+#random code I need to put somewhere
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny GMTOL_rooted_tree2.qza \
+  --i-table Mammal_table2.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file GMTOL_metadata2.txt  \
+  --output-dir core-metrics-resultsMammals2
+
+  qiime diversity alpha-group-significance \
+  --i-alpha-diversity core-metrics-resultsMammals2/faith_pd_vector.qza \
+  --m-metadata-file GMTOL_metadata2.txt \
+  --o-visualization core-metrics-resultsMammals2/faith-pd-group-significance.qzv
+
+  qiime diversity alpha-rarefaction \
+  --i-table Mammal_table2.qza \
+  --i-phylogeny GMTOL_rooted_tree2.qza \
+  --p-max-depth 6000 \
+  --m-metadata-file GMTOL_metadata2.txt \
+  --o-visualization core-metrics-resultsMammals2/Mammal-alpha-rarefaction.qzv  
+
+  qiime taxa barplot \
+  --i-table Mammal_table2.qza \
+  --i-taxonomy GMTOL_taxonomy2.qza \
+  --m-metadata-file GMTOL_metadata2.txt \
+  --o-visualization taxa-bar-plotsMammals2.qzv
+
+  qiime feature-table group \
+  --i-table Mammal_table2.qza \
+  --p-axis sample \
+  --m-metadata-file GMTOL_metadata2.txt \
+  --m-metadata-column Order \
+  --p-mode sum \
+  --o-grouped-table Mammal_table2_grouped.qza
+
+qiime taxa barplot \
+  --i-table Mammal_table2_grouped.qza \
+  --i-taxonomy GMTOL_taxonomy2.qza \
+  --o-visualization taxa-bar-plotsMammalsGrouped.qzv
+####
+
+#now trying to separate out the V3V4 and V4 samples of GMTOLsong
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsong_tablef.qza \
+ --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --p-where "Primer='V4'" \
+  --o-filtered-table GMTOLsong_tablef_V4.qza
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsong_tablef.qza \
+ --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --p-where "Primer='V3-V4'" \
+  --o-filtered-table GMTOLsong_tablef_V3-V4.qza
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny GMTOLsong_rooted_treef.qza \
+  --i-table GMTOLsong_tablef_V3-V4.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --output-dir core-metrics-results-GMTOLsongV3V4
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny GMTOLsong_rooted_treef.qza \
+  --i-table GMTOLsong_tablef_V4.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --output-dir core-metrics-results-GMTOLsongV4
+
+take out annelids..
+pull randomly from class level to compare R2
+test R2 across different sample sizes and compare how much the R2 changes
+
+Email Celeste about the metagenomics data
+Email Daniel about EMP non-host associated data
+Email Rob about Microbiome Conservancy
+
+#doing adonis across different sample sizes
+
+qiime diversity adonis \
+  --i-distance-matrix core-metrics-results-GMTOLsoloN1_V3V4/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ../Merged/Jul26metadataGMTOLsong.txt \
+  --o-visualization adonis/GMTOLsoloN1_V3V4_ClassDiet_adonis.qzv \
+  --p-n-jobs 4 \
+  --p-formula Class+Family+DietSimp
+
+qiime diversity adonis \
+  --i-distance-matrix core-metrics-results-GMTOLsoloN5_V3V4/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ../Merged/Jul26metadataGMTOLsong.txt \
+  --o-visualization adonis/GMTOLsoloN5_V3V4_ClassDiet_adonis.qzv \
+  --p-n-jobs 4 \
+  --p-formula Class+Family+DietSimp
+
+qiime diversity adonis \
+  --i-distance-matrix core-metrics-results-GMTOLsoloN20_V3V4/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ../Merged/Jul26metadataGMTOLsong.txt \
+  --o-visualization adonis/GMTOLsoloN20_V3V4_ClassDiet_adonis.qzv \
+  --p-n-jobs 4 \
+  --p-formula Class+Family+DietSimp
+
+qiime diversity adonis \
+  --i-distance-matrix core-metrics-results-GMTOLsoloN1_V4/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ../Merged/Jul26metadataGMTOLsong.txt \
+  --o-visualization adonis/GMTOLsoloN1_V4_ClassDiet_adonis.qzv \
+  --p-n-jobs 4 \
+  --p-formula Class+Family+DietSimp
+
+qiime diversity adonis \
+  --i-distance-matrix core-metrics-results-GMTOLsoloN5_V4/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ../Merged/Jul26metadataGMTOLsong.txt \
+  --o-visualization adonis/GMTOLsoloN5_V4_ClassDiet_adonis.qzv \
+  --p-n-jobs 4 \
+  --p-formula Class+Family+DietSimp
+
+qiime diversity adonis \
+  --i-distance-matrix core-metrics-results-GMTOLsoloN20_V4/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ../Merged/Jul26metadataGMTOLsong.txt \
+  --o-visualization adonis/GMTOLsoloN5_V20_ClassDiet_adonis.qzv \
+  --p-n-jobs 4 \
+  --p-formula Class+Family+DietSimp
+
+ qiime tools export --input-path GMTOLsong_tablef_V4.qza --output-path ./  
+biom convert -i feature-table.biom -o GMTOLsong_tablef_V4.tsv --to-tsv 
+
+ qiime tools export --input-path GMTOLsong_tablef_V3-V4.qza --output-path ./  
+biom convert -i feature-table.biom -o GMTOLsong_tablef_V3-V4.tsv --to-tsv 
+
+# installing qiime conda env on jupyter hub had to install ipykernel first
+
+python -m ipykernel install --user --name=qiime2-2023.2
+
+#REMEMBER to run this inside the qiime2-2023.2 env in the temrinal and then open up jupyterhub where you can immediately import qiime2!
+
+#running 2nd round of sample size comparisons to see if they are similar
+
+
+#now trying to separate out the V3V4 and V4 samples of GMTOLsong
+#trying just GMTOl solo now
+qiime feature-table filter-samples \
+  --i-table merged_table_Jun2_GMTOL.qza \
+  --m-metadata-file ../GMTOLsubsample/N1samples2keepGsolo2.tsv \
+  --o-filtered-table ../GMTOLsubsample/GMTOLsolo_table2N1.qza
+
+qiime feature-table filter-samples \
+  --i-table merged_table_Jun2_GMTOL.qza \
+  --m-metadata-file ../GMTOLsubsample/N5samples2keepGsolo2.tsv \
+  --o-filtered-table ../GMTOLsubsample/GMTOLsolo_table2N5.qza
+
+qiime feature-table filter-samples \
+  --i-table merged_table_Jun2_GMTOL.qza \
+  --m-metadata-file ../GMTOLsubsample/N20samples2keepGsolo2.tsv \
+  --o-filtered-table ../GMTOLsubsample/GMTOLsolo_table2N20.qza
+
+
+
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsolo_table2N1.qza \
+ --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --p-where "Primer='V3-V4'" \
+  --o-filtered-table GMTOLsolo_table2N1_V3V4.qza
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsolo_table2N1.qza \
+ --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --p-where "Primer='V4'" \
+  --o-filtered-table GMTOLsolo_table2N1_V4.qza
+
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsolo_table2N5.qza \
+ --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --p-where "Primer='V3-V4'" \
+  --o-filtered-table GMTOLsolo_table2N5_V3V4.qza
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsolo_table2N5.qza \
+ --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --p-where "Primer='V4'" \
+  --o-filtered-table GMTOLsolo_table2N5_V4.qza
+
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsolo_table2N20.qza \
+ --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --p-where "Primer='V3-V4'" \
+  --o-filtered-table GMTOLsolo_table2N20_V3V4.qza
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsolo_table2N20.qza \
+ --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --p-where "Primer='V4'" \
+  --o-filtered-table GMTOLsolo_table2N20_V4.qza
+
+#NOW CORE METRICS 
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ../Merged/GMTOLsong_rooted_treef.qza \
+  --i-table GMTOLsolo_table2N1_V3V4.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --output-dir core-metrics-results-GMTOLsolo2N1_V3V4
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ../Merged/GMTOLsong_rooted_treef.qza \
+  --i-table GMTOLsolo_table2N1_V4.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --output-dir core-metrics-results-GMTOLsolo2N1_V4
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ../Merged/GMTOLsong_rooted_treef.qza \
+  --i-table GMTOLsolo_table2N5_V3V4.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --output-dir core-metrics-results-GMTOLsolo2N5_V3V4
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ../Merged/GMTOLsong_rooted_treef.qza \
+  --i-table GMTOLsolo_table2N5_V4.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --output-dir core-metrics-results-GMTOLsolo2N5_V4
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ../Merged/GMTOLsong_rooted_treef.qza \
+  --i-table GMTOLsolo_table2N20_V3V4.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --output-dir core-metrics-results-GMTOLsolo2N20_V3V4
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ../Merged/GMTOLsong_rooted_treef.qza \
+  --i-table GMTOLsolo_table2N20_V4.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --output-dir core-metrics-results-GMTOLsolo2N20_V4
+
+
+qiime diversity adonis \
+  --i-distance-matrix core-metrics-results-GMTOLsolo2N1_V3V4/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ../Merged/Jul26metadataGMTOLsong.txt \
+  --o-visualization adonis/GMTOLsolo2N1_V3V4_ClassDiet_adonis.qzv \
+  --p-n-jobs 4 \
+  --p-formula Class+Family+DietSimp
+
+qiime diversity adonis \
+  --i-distance-matrix core-metrics-results-GMTOLsolo2N5_V3V4/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ../Merged/Jul26metadataGMTOLsong.txt \
+  --o-visualization adonis/GMTOLsolo2N5_V3V4_ClassDiet_adonis.qzv \
+  --p-n-jobs 4 \
+  --p-formula Class+Family+DietSimp
+
+qiime diversity adonis \
+  --i-distance-matrix core-metrics-results-GMTOLsolo2N20_V3V4/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ../Merged/Jul26metadataGMTOLsong.txt \
+  --o-visualization adonis/GMTOLsolo2N20_V3V4_ClassDiet_adonis.qzv \
+  --p-n-jobs 4 \
+  --p-formula Class+Family+DietSimp
+
+qiime diversity adonis \
+  --i-distance-matrix core-metrics-results-GMTOLsolo2N1_V4/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ../Merged/Jul26metadataGMTOLsong.txt \
+  --o-visualization adonis/GMTOLsolo2N1_V4_ClassDiet_adonis.qzv \
+  --p-n-jobs 4 \
+  --p-formula Class+Family+DietSimp
+
+qiime diversity adonis \
+  --i-distance-matrix core-metrics-results-GMTOLsolo2N5_V4/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ../Merged/Jul26metadataGMTOLsong.txt \
+  --o-visualization adonis/GMTOLsolo2N5_V4_ClassDiet_adonis.qzv \
+  --p-n-jobs 4 \
+  --p-formula Class+Family+DietSimp
+
+qiime diversity adonis \
+  --i-distance-matrix core-metrics-results-GMTOLsolo2N20_V4/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ../Merged/Jul26metadataGMTOLsong.txt \
+  --o-visualization adonis/GMTOLsolo2N20_V4_ClassDiet_adonis.qzv \
+  --p-n-jobs 4 \
+  --p-formula Class+Family+DietSimp
+
+#Now trying to filter Akkermansia and see what happens
+
+qiime taxa filter-table \
+  --i-table ../GMTOLsubsample/GMTOLsolo_tableN30.qza \
+  --i-taxonomy GMTOLsong_taxonomy.qza  \
+  --p-include Akkermansia,Faecalibacterium \
+  --o-filtered-table Akkermansia/GMTOLtable30N_Akk_Feac.qza
+
+qiime tools export --input-path Akkermansia/GMTOLtable30N_Akk_Feac.qza --output-path Akkermansia/
+
+biom convert -i Akkermansia/feature-table.biom -o Akkermansia/GMTOLtable30N_Akk_Feac.tsv --to-tsv
+
+qiime feature-table group \
+--i-table Akkermansia/GMTOLtable30N_Akk_Feac.qza \
+--p-axis sample \
+--m-metadata-file Jul26metadataGMTOLsong.txt \
+--m-metadata-column Family \
+--p-mode sum \
+--o-grouped-table Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged.qza
+
+qiime tools export --input-path Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged.qza --output-path Akkermansia/
+biom convert -i Akkermansia/feature-table.biom -o Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged.tsv --to-tsv
+
+qiime tools export --input-path GMTOLsong_taxonomy.qza --output-path ./
+
+qiime taxa filter-table \
+  --i-table Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged.qza \
+  --i-taxonomy GMTOLsong_taxonomy.qza  \
+  --p-include 'Akkermansia muciniphila','Faecalibacterium prausnitzii' \
+  --o-filtered-table Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged_Filtered.qza
+
+qiime taxa collapse \
+  --i-table Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged_Filtered.qza \
+  --i-taxonomy GMTOLsong_taxonomy.qza  \
+  --p-level 7 \
+  --o-collapsed-table Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged_Rank7.qza
+
+qiime tools export --input-path Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged_Rank7.qza --output-path Akkermansia/
+biom convert -i Akkermansia/feature-table.biom -o Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged_Rank7.tsv --to-tsv
+
+#~~~~~ Now trying average
+
+qiime feature-table group \
+--i-table Akkermansia/GMTOLtable30N_Akk_Feac.qza \
+--p-axis sample \
+--m-metadata-file Jul26metadataGMTOLsong.txt \
+--m-metadata-column Family \
+--p-mode mean-ceiling \
+--o-grouped-table Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMergedMean.qza
+
+qiime taxa filter-table \
+  --i-table Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMergedMean.qza \
+  --i-taxonomy GMTOLsong_taxonomy.qza  \
+  --p-include 'Akkermansia muciniphila','Faecalibacterium prausnitzii' \
+  --o-filtered-table Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged_FilteredMean.qza
+
+qiime taxa collapse \
+  --i-table Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged_FilteredMean.qza \
+  --i-taxonomy GMTOLsong_taxonomy.qza  \
+  --p-level 7 \
+  --o-collapsed-table Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged_Rank7Mean.qza
+
+qiime tools export --input-path Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged_Rank7Mean.qza --output-path Akkermansia/
+biom convert -i Akkermansia/feature-table.biom -o Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged_Rank7Mean.tsv --to-tsv
+
+#now doing merged mean but including all Akk and Feac
+qiime taxa filter-table \
+  --i-table Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMergedMean.qza \
+  --i-taxonomy GMTOLsong_taxonomy.qza  \
+  --p-include 'g__Akkermansia','g__Faecalibacterium' \
+  --o-filtered-table Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged_FilteredMeanGenus.qza
+
+qiime taxa collapse \
+  --i-table Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged_FilteredMeanGenus.qza \
+  --i-taxonomy GMTOLsong_taxonomy.qza  \
+  --p-level 7 \
+  --o-collapsed-table Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged_Rank7MeanGenus.qza
+
+qiime tools export --input-path Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged_Rank7MeanGenus.qza --output-path Akkermansia/
+biom convert -i Akkermansia/feature-table.biom -o Akkermansia/GMTOLtable30N_Akk_Feac_FamilyMerged_Rank7MeanGenus.tsv --to-tsv
+
+#ok now going to filter the GMTOLsoloF table to see if I can get size down to do this in R
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsolo_tableN30.qza \
+ --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --p-where "Primer='V3-V4'" \
+  --o-filtered-table GMTOLsolo_tableN30_V3V4.qza
+
+qiime feature-table filter-samples \
+  --i-table GMTOLsolo_tableN30.qza \
+ --m-metadata-file Jul26metadataGMTOLsong.txt \
+  --p-where "Primer='V4'" \
+  --o-filtered-table GMTOLsolo_tableN30_V4.qza
+
+qiime feature-table filter-features \
+  --i-table GMTOLsolo_tableN30_V4.qza \
+  --p-min-samples 2 \
+  --o-filtered-table GMTOLsolo_tableN30_V4_2s.qza
+
+qiime feature-table filter-features \
+  --i-table GMTOLsolo_tableN30_V4_2s.qza \
+  --p-min-frequency 10 \
+  --o-filtered-table GMTOLsolo_tableN30_V4_taxa_2s10r.qza
+
+qiime feature-table filter-features \
+  --i-table GMTOLsolo_tableN30_V4.qza \
+  --p-min-samples 5 \
+  --o-filtered-table GMTOLsolo_tableN30_V4_5s.qza
+
+qiime feature-table filter-features \
+  --i-table GMTOLsolo_tableN30_V4_5s.qza \
+  --p-min-frequency 20 \
+  --o-filtered-table GMTOLsolo_tableN30_V4_taxa_5s20r.qza
+
+qiime feature-table filter-features \
+  --i-table GMTOLsolo_tableN30_V4_5s.qza \
+  --p-min-frequency 100 \
+  --o-filtered-table GMTOLsolo_tableN30_V4_taxa_5s100r.qza
+
+qiime tools export --input-path GMTOLsolo_tableN30_V4_taxa_5s100r.qza --output-path .
+biom convert -i feature-table.biom -o GMTOLsolo_tableN30_V4_taxa_5s100r.tsv --to-tsv
+
+#trying new jupyter conda env
+
+python -m ipykernel install --user --name=qiime2-2023.7
+
+
+qiime feature-table group \
+--i-table subsample/GMTOLsong_tableN20.qza \
+--p-axis sample \
+--m-metadata-file Jul26metadataGMTOLsong.txt \
+--m-metadata-column Family \
+--p-mode mean-ceiling \
+--o-grouped-table Akkermansia/GMTOLsongtableN20FamilyMergedMean.qza
+
+qiime taxa filter-table \
+  --i-table Akkermansia/GMTOLsongtableN20FamilyMergedMean.qza \
+  --i-taxonomy GMTOLsong_taxonomy.qza  \
+  --p-include 'Akkermansia muciniphila','Faecalibacterium prausnitzii' \
+  --o-filtered-table Akkermansia/GMTOLsongtableN20FamilyMergedMeanAkkFeac.qza
+
+qiime taxa collapse \
+  --i-table Akkermansia/GMTOLsongtableN20FamilyMergedMeanAkkFeac.qza \
+  --i-taxonomy GMTOLsong_taxonomy.qza  \
+  --p-level 7 \
+  --o-collapsed-table Akkermansia/GMTOLsongtableN20FamilyMergedMeanAkkFeacRank7.qza
+
+qiime tools export --input-path Akkermansia/GMTOLsongtableN20FamilyMergedMeanAkkFeacRank7.qza --output-path Akkermansia/
+biom convert -i Akkermansia/feature-table.biom -o Akkermansia/GMTOLsongtableN20FamilyMergedMeanAkkFeacRank7.tsv --to-tsv
+
+qiime feature-table relative-frequency \
+--i-table Akkermansia/GMTOLsongtableN30FamilyMergedMean.qza \
+--o-relative-frequency-table Akkermansia/GMTOLsongtableN30FamilyMergedMeanRel.qza
+
+#collapsing then re-transofmring to rel abundances
+qiime taxa collapse \
+  --i-table Akkermansia/GMTOLsongtableN30FamilyMergedMean.qza \
+  --i-taxonomy GMTOLsong_taxonomy.qza  \
+  --p-level 7 \
+  --o-collapsed-table Akkermansia/GMTOLsongtableN30FamilyMergedMeanRank7.qza
+
+qiime feature-table relative-frequency \
+--i-table Akkermansia/GMTOLsongtableN30FamilyMergedMeanRank7.qza \
+--o-relative-frequency-table Akkermansia/GMTOLsongtableN30FamilyMergedMeanRank7Rel.qza
+
+qiime tools export --input-path Akkermansia/GMTOLsongtableN30FamilyMergedMeanRank7Rel.qza --output-path Akkermansia/
+
+biom convert -i Akkermansia/feature-table.biom -o Akkermansia/GMTOLsongtableN30FamilyMergedMeanRank7Rel.tsv --to-tsv
+
+###testing alpha diversity differences across sample size
+
+qiime diversity alpha-group-significance \
+  --i-alpha-diversity core-metrics-results-GMTOLsolo2N1_V4/faith_pd_vector.qza \
+  --m-metadata-file ../Merged/Jul26metadataGMTOLsong.txt \
+  --o-visualization core-metrics-results-GMTOLsolo2N1_V4/faith-pd-group-significanceN1V4.qzv
+
+qiime diversity alpha-group-significance \
+  --i-alpha-diversity core-metrics-results-GMTOLsolo2N5_V4/faith_pd_vector.qza \
+  --m-metadata-file ../Merged/Jul26metadataGMTOLsong.txt \
+  --o-visualization core-metrics-results-GMTOLsolo2N5_V4/faith-pd-group-significanceN5V4.qzv
+
+qiime diversity alpha-group-significance \
+  --i-alpha-diversity core-metrics-results-GMTOLsolo2N20_V4/faith_pd_vector.qza \
+  --m-metadata-file ../Merged/Jul26metadataGMTOLsong.txt \
+  --o-visualization core-metrics-results-GMTOLsolo2N20_V4/faith-pd-group-significanceN20V4.qzv
+
+
+qiime diversity alpha-group-significance \
+  --i-alpha-diversity core-metrics-results-GMTOLsolo2N1_V3V4/faith_pd_vector.qza \
+  --m-metadata-file ../Merged/Jul26metadataGMTOLsong.txt \
+  --o-visualization core-metrics-results-GMTOLsolo2N1_V3V4/faith-pd-group-significanceN1V4.qzv
+
+qiime diversity alpha-group-significance \
+  --i-alpha-diversity core-metrics-results-GMTOLsolo2N5_V3V4/faith_pd_vector.qza \
+  --m-metadata-file ../Merged/Jul26metadataGMTOLsong.txt \
+  --o-visualization core-metrics-results-GMTOLsolo2N5_V3V4/faith-pd-group-significanceN5V4.qzv
+
+qiime diversity alpha-group-significance \
+  --i-alpha-diversity core-metrics-results-GMTOLsolo2N20_V3V4/faith_pd_vector.qza \
+  --m-metadata-file ../Merged/Jul26metadataGMTOLsong.txt \
+  --o-visualization core-metrics-results-GMTOLsolo2N20_V3V4/faith-pd-group-significanceN20V3V4.qzv
