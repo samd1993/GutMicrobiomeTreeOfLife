@@ -46,9 +46,12 @@ irow=rownames(metaG)  #in this case you put metadata2 here for the new metadata 
 int=intersect(irow,icol)
 cts2=of5[ ,int]
 meta2=metaG[int, ]
+```
 
 #So now you have matching metadata and otu table
 #now run deseq. For Location you would put Age or whatever the Age column is.
+
+```{r}
 library(DESeq2)
 dds <- DESeqDataSetFromMatrix(countData = cts2,
                               colData = meta2,
