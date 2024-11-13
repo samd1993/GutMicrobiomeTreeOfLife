@@ -44,12 +44,12 @@ metaC=subset(metaphy,Species=='Pan_troglodytes')
 #now this filters the metadata and the otu table to have the same samples (it maches OTU column names to metadata row names
 
 ```{r}
-icol=colnames(cts) #in this case the name of your OTU table (which you have read in before with the adonis script I believe)
+icol=colnames(cts) #in this case cts is the the name of your OTU table (which you have read in before with the adonis script I believe)
 irow=rownames(metaG)  #in this case you put metadata2 here for the new metadata you made
 
 int=intersect(irow,icol)
-cts2=of5[ ,int]
-meta2=metaG[int, ]
+cts2=cts[ ,int]   #again cts is your metadata
+meta2=metaG[int, ]      #and again here metaG is your metadata
 ```
 
 #So now you have matching metadata and otu table
