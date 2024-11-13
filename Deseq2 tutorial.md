@@ -24,7 +24,9 @@ library(ggplot2)
 ```
 
 #now here is the Deseq code. Anything with 'm' or 'meta' is my metadata file and I happened to name my OTU table 'cts' but you can name it whatever you want
+
 #I happen to subset the metadata a couple times. You can start by doing Preschool vs Adult first. So subset those out by doing metadata2=subset(metadata, Age=='Preschool' & Age=='Adult')
+
 #obviously make sure to match how they are spelled in actual metadata
 
 ```{r}
@@ -37,9 +39,11 @@ metaphy <- subset(mphy, !is.na(Location))
 metaphy=subset(metaphy,Location!='human')
 metaG=subset(metaphy,Species=='Gorilla_gorilla_gorilla')
 metaC=subset(metaphy,Species=='Pan_troglodytes')
+```
 
 #now this filters the metadata and the otu table to have the same samples (it maches OTU column names to metadata row names
 
+```{r}
 icol=colnames(cts) #in this case the name of your OTU table (which you have read in before with the adonis script I believe)
 irow=rownames(metaG)  #in this case you put metadata2 here for the new metadata you made
 
@@ -49,6 +53,7 @@ meta2=metaG[int, ]
 ```
 
 #So now you have matching metadata and otu table
+
 #now run deseq. For Location you would put Age or whatever the Age column is.
 
 ```{r}
