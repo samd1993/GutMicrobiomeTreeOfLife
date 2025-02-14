@@ -1,0 +1,560 @@
+---
+title: "gmtol tree"
+output: html_document
+date: "2024-06-17"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+install.packages("ape")
+library(ape)
+library(phangorn)
+install.packages("phytools")
+library(phytools)
+install.packages('taxize')
+library(taxize)
+```
+```{r github-installation, eval=FALSE} 
+library(devtools)
+install_github("arendsee/phylostratr")
+library(phylostratr)
+
+
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("ggtree")
+
+library(ggtree)
+library(ape)
+```
+
+```{r}
+setwd("/Users/samd/OneDrive\ -\ Northwestern\ University/TOL")
+gl=readLines("GMTOL tree listAug8taxid.txt")
+
+ncbi_tree(gl)
+
+
+```
+doesnt seem to work well
+now trying chatgpt R method
+
+```{r}
+setwd("/Users/samd/OneDrive\ -\ Northwestern\ University/TOL")
+taxa_ids <- readLines("GMTOL tree listAug8taxid.txt")
+```
+
+```{r}
+taxa_info <- classification(taxa_ids, db = "ncbi")
+```
+
+```{r}
+tree <- class2tree(taxa_info)
+```
+it works now! have to do tree$phylo
+```{r}
+class(tree)
+plot(tree)
+tree$phylo
+dist_matrix <- taxdist(taxa_info)
+treephy <- ape::as.phylo(tree)
+
+ggtree(tree$phylo)
+tp=tree$phylo
+setwd("/Users/samd/OneDrive\ -\ Northwestern\ University/TOL")
+ape::write.tree(tree$phylo, file = "GMTOLall.newick")
+```
+
+```{r}
+ggtree(tp, layout="circular")
+
+```
+```{r}
+setwd("/Users/samd/OneDrive\ -\ Northwestern\ University/TOL/phylo")
+library(ape)
+library(phytools)
+install.packages('castor')
+library(castor)
+
+```
+```{r}
+setwd("/Users/samd/OneDrive\ -\ Northwestern\ University/TOL/phylo")
+table=read.table("GrpTablePhylum2.txt",sep='\t',header=TRUE,row.names=1)
+htree=read.tree("hostf_tree2.nwk")
+
+
+```
+
+destroyX = function(es) {
+  f = es
+  for (col in c(1:ncol(f))){ #for each column in dataframe
+    if (startsWith(colnames(f)[col], "X") == TRUE)  { #if starts with 'X' ..
+      colnames(f)[col] <- substr(colnames(f)[col], 2, 100) #get rid of it
+    }
+  }
+  assign(deparse(substitute(es)), f, inherits = TRUE) #assign corrected data to original name
+}
+
+destroyX(table)
+head(table)
+
+```{r}
+length(htree$tip.label)
+
+nrow(table)
+
+head(htree$tip.label)
+
+rownames(tablet) <- sub(".","_",rownames(tablet))  #do all this if needed. I edned up importing and fixing in excel
+
+htips=htree$tip.label
+irow=rownames(table)
+
+int=intersect(irow,htips)
+length(int)
+table2=table[int,]
+nrow(table2)
+
+phylopca<-phyl.pca(htree,table2)
+print(phylopca)
+```
+
+```{r}
+biplot(phylopca,cex=0.3)
+```
+```{r}
+install.packages('factoextra')
+install.packages('ggbiplot')
+library(ggbiplot)
+library(factoextra)
+```
+
+```{r}
+install.packages('plotly')
+install.packages('ggfortify')
+library(plotly)
+library(ggfortify)
+```
+
+
+```{r}
+prin=as.princomp(phylopca)
+prc=as.prcomp(phylopca)
+prin$scale=prin$scale/10
+prin$scores
+```
+
+trying to merge metadata with prin
+
+```{r}
+setwd("/Users/samd/OneDrive\ -\ Northwestern\ University/TOL/phylo")
+meta=read.table("GrpSpeciesMetadataAug21_hostf.txt",sep='\t',header=TRUE, row.names=1)
+```
+```{r}
+length(prin$scores)
+# Load necessary libraries
+library(factoextra)
+
+# Assuming 'prin' is your PCA object and 'metadata' is your metadata dataframe
+
+# Merge PCA results with metadata
+int=intersect(rownames(meta),rownames(prin$scores)
+meta2=meta[int,]
+merged_data <- merge(as.data.frame(prin$scores), meta, by = "row.names", all.x = TRUE)
+rownames(merged_data) <- merged_data$Row.names
+merged_data$Row.names <- NULL
+
+# Now plot the PCA biplot with colored points based on a metadata column (e.g., 'group')
+
+#this is to add a Diet column to PCA data..this can work for so many things. Vlookup basically
+
+p$data
+p$data$DietSimp = meta2$DietSimp[match(rownames(p$data),rownames(meta2))]
+```
+```{r}
+p=(fviz_pca_biplot(prin, 
+                select.var = list(contrib = 5),
+                geom = c("point", "text"), 
+                      geom.var = c("point", "text"),
+                      palette="ucscgb",
+                      label="var",       
+                arrowsize = 1, 
+                labelsize = 0.5,
+                 repel = TRUE,
+                invisible="quali",
+                      pointshape = 19, pointsize = 1.5, alpha=0.7,
+                col.ind = meta2$Class,xlim=c(-1100,700),ylim=c(-1000,1000)))
+ labs(colour= "Class" )
+```
+
+```{r}
+ggplot(p$data,
+aes(x=x,y=y,color=Col.,shape=DietSimp)) + geom_point()+
+                      theme_minimal() +
+                     theme(plot.title = element_text(hjust = 0.5,size = 20, face = "bold"),
+                           legend.title = element_text(size = 12), 
+                           legend.text = element_text(size = 8),
+                           legend.key.size = unit(0.5,"line") )+
+                     guides(shape = guide_legend(override.aes = list(size = 4)),
+                           color = guide_legend(override.aes = list(size = 4)))+
+                             scale_shape_manual(values=c(16,16,16,17,16))
+```
+
+
+p$layers[[1]]$meta2$DietSimp <- factor(meta2$DietSimp)
+p$layers[[1]]$mapping <- aes(x, y, colour = meta2$Class, shape = meta2$DietSimp)
+p$layers[[1]]$aes_params$size <- 1
+p$layers[[1]]$aes_params
+
+p <- p + labs(shape = 'DietSimp')
+p
+```
+
+
+```{r}
+p=fviz_pca_biplot(prin, select.var = list(contrib = 5),geom=("point"),geom.var=c("arrow","text")
+      , arrowsize = 1, labelsize=0.5   ) 
+p+geom_segment(data = prin$loadings, aes(x = 0, y = 0, xend = (Comp.1*5),
+     yend = (Comp.2*5)), arrow = arrow(length=prin$loadings))+
+  annotate("text", x = (prin$loadings$Comp.1*5), y = (prin$loadings$Comp.2*5),
+     label = PCAloadings$Variables)
+```
+
+```{r}
+fviz(prc, "ind")
+p=fviz_pca_biplot(prc, select.var = list(contrib = 5))
+p+geom_segmen(arrow = arrow(length = unit(1/2)))
+```
+install.packages('PHclust')
+```{r}
+library(PHclust)
+ Hybrid(table, absolute = TRUE,Kstart=4,Treatment = rep(c(1,2), each = 2))
+
+```
+
+Trying to calc tree distance from humans
+
+```{r}
+library(ape)
+library(phytools)
+library(ggtree)
+setwd("/Users/samd/OneDrive\ -\ Northwestern\ University/TOL/phylo")
+tt=read.tree("hostf_tree2.nwk")
+
+ggtree(tt, layout="circular")
+cot=cophenetic(tt)
+cot
+View(cot)
+
+which(colnames(cot) == "Homo_sapiens")
+235
+coth=cot[,235,drop=FALSE]
+head(coth)
+View(coth)
+length(coth)
+
+tabler=table
+
+#library(phyloseq)
+#tabler = transform_sample_counts(table, function(x) x / sum(x) ) # doesnt work for some reason
+head(table)
+tabler <-sweep(tabler, 2, colSums(tabler), `/`)
+head(tabler)
+tail(table)
+
+which(colnames(tabler) == "d__Bacteria.p__Firmicutes_A")
+2
+tableFirmr=tabler[,2,drop=FALSE]
+
+cothtabler=transform(merge(coth,tableFirmr,by=0,all=TRUE), row.names=Row.names, Row.names=NULL)
+head(cothtabler)
+
+plot((cothtable[,1]),(cothtable[,2]/1000),xlab="Distance to humans",ylab="Rel. Abund. of Firmicutes Clade A")
+
+model <- lm((cothtabler[,2]) ~ (cothtabler[,1]), data = cothtabler)
+summary(model)
+```
+
+
+
+```{r}
+d__Bacteria.p__Firmicutes_D is column 5
+cothtable5=transform(merge(coth,table[,1:5],by=0,all=TRUE), row.names=Row.names, Row.names=NULL)
+head(cothtable5)
+
+p1=plot((cothtable5[,1]),(cothtable5[,3]/1000),xlab="Distance to humans",ylab="Rel. Abund. of Firmicutes Clade A")
+p2=plot((cothtable5[,1]),(cothtable5[,6]/1000),xlab="Distance to humans",ylab="Rel. Abund. of Firmicutes Clade D")
+#Clade D doesnt have much of a trend
+p3=plot((cothtable5[,1]),(cothtable5[,2]/1000),xlab="Distance to humans",ylab="Rel. Abund. of Proteobacteria",col=(alpha))
+
+par(mfrow = c(1, 3))
+
+
+
+
+```
+wana just see distributuion of class counts to see if i have good primitive coverage
+```{r}
+meta2
+tapply(rownames(meta2),meta2$Class, FUN = function(x) length(unique(x)))
+```
+fyi using UCSD now but some stuff is still on northwestern
+setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")
+```{r}
+library(dplyr)
+meta2=as.data.frame(meta2)
+meta2$sampleid=rownames(meta2)
+cothtable5$sampleid=rownames(cothtable5)
+```
+
+```{r}
+replicate(999,
+  {
+      m21=meta2 %>% 
+        group_by(Class) %>% 
+        slice_sample(n=21) |>
+        ungroup()## or we can use: filter(row_number() <= 5)
+      m21
+   cothtable5f = merge(cothtable5, m21, by='sampleid')
+  
+   model <- lm(d__Bacteria.p__Firmicutes_A ~ Homo_sapiens, data = cothtable5f)
+summary(model)
+
+
+r2=summary(model)$r.squared
+cb=cbind(coef(summary(model)),r2)
+
+ write.table(cb, 'FirmA_vsHom.csv' , append = TRUE, sep = ",", col.names = FALSE,row.names=TRUE) 
+  }
+)
+```
+
+
+```{r}
+#geom code for Firmicutes
+
+gF=ggplot(cothtable5f, aes(x=Homo_sapiens, y=d__Bacteria.p__Firmicutes_A/1000)) +
+  geom_point(alpha=0.3) +
+  ylim(0,1.0)+
+  ylab("Rel. Abund. of Firmicutes")+
+  xlab('Divergence from Homo sapiens')+
+   theme_classic()+
+  geom_smooth(method=lm , color="gray2", fill="gray2", se=TRUE)+
+    theme(axis.title.y = element_text(color="black",size=12))+
+     theme(axis.title.x = element_text(color="black",size=12))+
+     theme(axis.text.x = element_text(color="black",size=10),
+         axis.text.y = element_text(color="black", 
+                                    size=10))+
+                                    theme(plot.margin = unit(c(0.8,0.8,0.8,0.8), "cm"))
+                                    
+ 
+  gF
+```
+
+```{r}
+#Proteobacteria
+```
+
+
+```{r}
+gP=ggplot(cothtable5f, aes(x=Homo_sapiens, y=d__Bacteria.p__Proteobacteria/1000)) +
+  geom_point(alpha=0.5) +
+  ylab("Rel. Abund. of Proteobacteria")+
+  xlab('Divergence distance from Homo sapiens')+
+  geom_smooth(method=lm , color="gray2", fill="gray2", se=TRUE)+
+  theme_classic()
+  gP
+```
+
+```{r}
+gB=ggplot(cothtable5f, aes(x=Homo_sapiens, y=d__Bacteria.p__Bacteroidota /1000)) +
+  geom_point(alpha=0.5) +
+  ylab("Rel. Abund. of Bacteroidota")+
+  xlab('Divergence distance from Homo sapiens')+
+  geom_smooth(method=lm , color="gray2", fill="gray2", se=TRUE)+
+  theme_classic()
+  gB
+```
+
+
+```{r}
+replicate(999,
+  {
+      m21=meta2 %>% 
+        group_by(Class) %>% 
+        slice_sample(n=21) |>
+        ungroup()## or we can use: filter(row_number() <= 5)
+      m21
+   cothtable5f = merge(cothtable5, m21, by='sampleid')
+  
+   modelp <- lm(d__Bacteria.p__Proteobacteria ~ Homo_sapiens, data = cothtable5f)
+summary(modelp)
+
+
+r2=summary(modelp)$r.squared
+cbp=cbind(coef(summary(modelp)),r2)
+
+ write.table(cbp, 'FirmA_vsProt.csv' , append = TRUE, sep = ",", col.names = FALSE,row.names=TRUE) 
+  }
+)
+```
+
+```{r}
+  modelp <- lm(d__Bacteria.p__Proteobacteria ~ Homo_sapiens, data = cothtable5f)
+summary(modelp)
+```
+```{r}
+using UCSD now
+setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")
+```
+now i wanna add class data to this and add Class plots
+
+```{r}
+setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")
+tableClass=read.table("GMTOLsong_table2024_N20_f2all_V4_GrpSpecies_Class.tsv",sep='\t',header=TRUE,row.names=1)
+tableClass=destroyX(tableClass)
+tableClass
+tclass=as.data.frame(t(tableClass))
+head(tclass)
+View(tclass)
+rownames(tclass) <- gsub("\\.", "_", rownames(tclass))
+
+
+```
+
+```{r}
+which(colnames(tclass) == "d__Bacteria;p__Firmicutes_A;c__Clostridia_258483")
+3
+tclassClost=tclass[,3,drop=FALSE]
+tclassBact=tclass[,2,drop=FALSE]
+tclassAlph=tclass[,4,drop=FALSE]
+#adding Clost to cothtable
+cothtableClost=transform(merge(cothtabler,tclassClost,by=0,all=TRUE), row.names=Row.names, Row.names=NULL)
+cothtableBact=transform(merge(cothtableClost,tclassBact,by=0,all=TRUE), row.names=Row.names, Row.names=NULL)
+cothtableAlph=transform(merge(cothtableBact,tclassAlph,by=0,all=TRUE), row.names=Row.names, Row.names=NULL)
+head(cothtableClost)
+View(cothtableAlph)
+
+cothtableAlph$sampleid=rownames(cothtableAlph)
+
+```
+names(cothtableAlphf) <- gsub("\\.", "_", names(cothtableAlphf))
+```{r}
+m21a=meta2 %>% 
+        group_by(Class) %>% 
+        slice_sample(n=21) |>
+        ungroup()## or we can use: filter(row_number() <= 5)
+      m21a
+   cothtableAlphf = merge(cothtableAlph, m21a, by='sampleid')
+  
+   modelClost <- lm(d__Bacteria.p__Firmicutes_A_c__Clostridia_258483 ~ Homo_sapiens, data = cothtableAlphf)
+summary(modelClost)
+
+gClost=ggplot(cothtableAlphf, aes(x=Homo_sapiens, y=d__Bacteria.p__Firmicutes_A.c__Clostridia_258483/1000)) +
+  geom_point(alpha=0.5) +
+  ylab("Rel. Abund. of Clostridia")+
+  xlab('Divergence distance from Homo sapiens')+
+  geom_smooth(method=lm , color="gray2", fill="gray2", se=TRUE)+
+  theme_classic()
+  gClost
+
+gClost=ggplot(cothtableAlphf, aes(x=Homo_sapiens, y=d__Bacteria.p__Firmicutes_A.c__Clostridia_258483/1000)) +
+  geom_point(alpha=0.5) +
+  ylab("Rel. Abund. of Clostridia")+
+  xlab('Divergence distance from Homo sapiens')+
+  geom_smooth(method=lm , color="gray2", fill="gray2", se=TRUE)+
+  theme_classic()
+  gClost
+
+
+
+gBact=ggplot(cothtableAlphf, aes(x=Homo_sapiens, y=d__Bacteria.p__Bacteroidota.c__Bacteroidia/1000)) +
+  geom_point(alpha=0.5) +
+  ylab("Rel. Abund. of Bacteroidia")+
+  xlab('Divergence distance from Homo sapiens')+
+  geom_smooth(method=lm , color="gray2", fill="gray2", se=TRUE)+
+  theme_classic()
+  gBact
+  
+   
+gAlph=ggplot(cothtableAlphf, aes(x=Homo_sapiens, y=d__Bacteria.p__Proteobacteria.c__Alphaproteobacteria/1000)) +
+  geom_point(alpha=0.5) +
+  ylab("Rel. Abund. of Alphaproteobacteria")+
+  xlab('Divergence distance from Homo sapiens')+
+  geom_smooth(method=lm , color="gray2", fill="gray2", se=TRUE)+
+  theme_classic()
+  gAlph
+
+
+plot_grid(gP,gF,gB,gAlph,gClost,gBact)
+  
+
+
+
+plot((cothtableAlphf[,2]),(cothtableAlphf[,4]/1000),xlab="Distance to humans",ylab="Rel. Abund. of Clostridia")
+
+model <- lm((cothtabler[,2]) ~ (cothtabler[,1]), data = cothtabler)
+summary(model)
+```
+
+Checking how many species I have per primer
+
+```{r}
+setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")
+tm=read.table("GrpSpeciesMetadataDec4.txt",sep='\t',header=TRUE)
+tm
+tapply(tm$prefname,tm$Primer2, FUN = function(x) length(unique(x)))
+```
+
+
+
+Now trying to see what this looks like with insects as basal
+
+```{r}
+library(ape)
+library(phytools)
+library(ggtree)
+setwd("/Users/samd/OneDrive\ -\ Northwestern\ University/TOL/phylo")
+tt=read.tree("hostf_tree2.nwk")
+
+ggtree(tt, layout="circular")
+cot=cophenetic(tt)
+head(cot)
+View(cot)
+dim(cot)
+Temnothorax_nylanderi  #trying ants because other stuff like worms are so isolated evolutionary that everything will be distant
+
+which(colnames(cot) == "Temnothorax_nylanderi")
+View(cot[,565])
+565
+coto=cot[,565,drop=FALSE]
+head(coto)
+
+length(coth)
+
+
+#seems  like this is waste and will do tree like ROb suggested
+
+d__Bacteria.p__Firmicutes_D  d__Bacteria.p__Proteobacteria  d__Bacteria.p__Bacteroidota d__Bacteria.p__Firmicutes_A
+
+tablephy=table2[,c(1,2,3,5),drop=FALSE]
+head(tablephy)
+write.csv(tablephy,"tablephy_barchart.csv")
+
+```
+
+
+
+```{r}
+install.packages("doParallel")
+devtools::install_github("wdl2459/ConQuR")
+
+```
+
+```{r}
+setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/batcheffects")
+```
+

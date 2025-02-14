@@ -1,0 +1,30 @@
+---
+title: "Untitled"
+output: html_document
+date: "2024-09-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+setwd("/Users/samd/Downloads")
+t=read.csv("Degregori_etal_Comparative_Review_metadata2.csv",header=TRUE)
+t
+tapply(t$Study.Name,t$Class, FUN = function(x) length(unique(x)))
+```
+```{r}
+tapply(t$Study.Name,t$Phylum, FUN = function(x) length(unique(x)))
+```
+
+```{r}
+setwd("/Users/samd/Downloads")
+t=read.csv("BioRevMetadata.csv",header=TRUE)
+t
+tapply(t$Study.Name,t$Class, FUN = function(x) length(unique(x)))
+```
+```{r}
+tapply(t$Study.Name,t$Phylum, FUN = function(x) length(unique(x)))
+```
+
