@@ -769,7 +769,7 @@ for file in *.qza; do
     echo "Finishing deblur job"
 done
 
-srun --time=5:00:00 --partition=short --mem=300G -n 1 --pty bash -l 
+srun --time=1:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
 srun --time=1:00:00 --partition=rocky9_test --mem=24G -n 1 --pty bash -l 
 
 
@@ -3875,8 +3875,7 @@ mv ~/TOL/minich/GMTOLsong_taxonomyN20all_2024f2.qza ~/TOL/phylo/
 qiime taxa filter-table \
   --i-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2.qza \
   --i-taxonomy GMTOLsong_taxonomyN20all_2024f2.qza \
-  --p-mode exact \
-  --p-exclude "d__Bacteria;__","Unassigned;__","d__Bacteria;p__" \
+  --p-include "p__" \
   --o-filtered-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt.qza
 
 #filter out sample with less than 100 reads
