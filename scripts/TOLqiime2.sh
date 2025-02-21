@@ -3894,6 +3894,15 @@ qiime taxa barplot \
 
 #YOU HAVE TO CHANGE FONT IN EXCEL TO MAKE IT WORK...doesnt matter about text file format
 
+#make taxa barplot of ng_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt.qza to compare
+
+qiime taxa barplot \
+  --i-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt.qza \
+  --i-taxonomy GMTOLsong_taxonomyN20all_2024f2.qza \
+  --o-visualization GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt_taxa-bar_unfilt.qzv
+
+
+
 
 
 
