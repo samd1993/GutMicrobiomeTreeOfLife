@@ -769,8 +769,8 @@ for file in *.qza; do
     echo "Finishing deblur job"
 done
 
-srun --time=1:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
-srun --time=1:00:00 --partition=rocky9_test --mem=24G -n 1 --pty bash -l 
+srun --time=1:00:00 --partition=short --mem=12G -n 1 --pty bash -l 
+srun --time=4:00:00 --partition=rocky9_test --mem=64G -n 1 --pty bash -l 
 
 
 qiime feature-table summarize \
@@ -3901,9 +3901,31 @@ qiime taxa barplot \
   --i-taxonomy GMTOLsong_taxonomyN20all_2024f2.qza \
   --o-visualization GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt_taxa-bar_unfilt.qzv
 
+#this is missing FirmicutesAD table and then the subsequent empress plots I made
 
+#now I want to try running Birdman
 
+#installing qiime2 2024.5 ..had to do it on rocky_9 because glibc is updated there
+#doesnt work still for birdman so now trying on normal barnacle by changing c-ares to different version
 
+conda env create -n q24.5v2 --file qiime2-amplicon-2024.5-py39-linux-conda.yml
+
+conda activate qiime2-2024.5
+
+cd ./q2-birdman
+
+conda env create -n q2-birdman-dev --file ./environments/q2-birdman-qiime2-tiny-2025.4.yml
+
+module load gcc_9.3.0
+module load cmake_3.18.2
+
+#seems to not work above due to linux incompaitbility issues
+
+conda env create -f BIRDMAn-CLI/birdman_env.yml -n birdman
+conda activate birdman
+
+cd BIRDMAn-CLI
+pip install -e .
 
 
 
