@@ -769,8 +769,12 @@ for file in *.qza; do
     echo "Finishing deblur job"
 done
 
-srun --time=1:00:00 --partition=short --mem=12G -n 1 --pty bash -l 
+srun --time=3:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
 srun --time=4:00:00 --partition=rocky9_test --mem=64G -n 1 --pty bash -l 
+srun --time=12:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
+
+
+
 
 
 qiime feature-table summarize \
@@ -3927,10 +3931,41 @@ conda activate birdman
 cd BIRDMAn-CLI
 pip install -e .
 
+#run birdman-cli where Class is the metadata column of interest
+birdman-cli run -i GMTOLsong_table2024_N20_f2all_V4.biom -o birdmanout2 -m Feb26_25_GMTOLsong_metadata_all.txt -f 'Chordata'
 
+#not working so trying birdman base 
 
+conda install -c conda-forge cmdstanpy
 
+#doing kernel thing
 
+python -m ipykernel install --user --name=birdman
 
+#have to fix metadata to match for CLI to work and 
 
+#filter GMTOLsong_table2024_N20_f2all_V4.qza to match Mar1_25_GMTOL_metadata_Vert.txt in qiime2
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4.qza \
+  --m-metadata-file ~/TOL/phylo/Mar1_25_GMTOL_metadata_Vert.txt \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert.qza
+
+#and then export that table to folder called GMTOLsong_table2024_N20_f2all_V4_Vert
+
+qiime tools export --input-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert.qza --output-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert
+
+#and then rename biome file to GMTOLsong_table2024_N20_f2all_V4_Vert.biom
+
+mv ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert/feature-table.biom ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert/GMTOLsong_table2024_N20_f2all_V4_Vert.biom
+
+#now running BIRDMAN again
+
+birdman-cli run -i GMTOLsong_table2024_N20_f2all_V4_Vert.biom -o birdmanout4 -m Mar1_25_GMTOL_metadata_Vert.txt -f "Chordata"
+
+mv ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert/GMTOLsong_table2024_N20_f2all_V4_Vert.biom ~/TOL/phylo/
+
+#not working again so I am updating cmdstampy and arviz to match Lucas's verison (in our slack dms)
+
+conda install -c conda-forge cmdstanpy=1.0.7 arviz=0.17.1
 
