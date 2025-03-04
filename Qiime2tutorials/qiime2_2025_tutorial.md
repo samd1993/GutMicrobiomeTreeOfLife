@@ -47,7 +47,7 @@
     --output-path <authorLastnames>_demux.qza \
     --input-format SingleEndFastqManifestPhred33V2
   
-#filter by quality scores
+## filter by quality scores
 
 qiime quality-filter q-score \
  --i-demux <authorLastnames>_demux.qza \
