@@ -1,14 +1,14 @@
-## activate linux
+## activate linux (for Windows Users)
 
 `wsl`
 
   
 
-## update conda
+## update conda (if installing qiime2 for first time)
 
 `conda update conda`
 
-  
+##install qiime2 version 2023.7
 
 ## activate qiime
 
