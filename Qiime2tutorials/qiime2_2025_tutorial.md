@@ -57,13 +57,15 @@
 
 ## run deblur (denoising step that runs quality control on all the sequences and trims them to same length)
 
-`qiime deblur denoise-16S \
+```
+qiime deblur denoise-16S \
   --i-demultiplexed-seqs <authorLastnames>_demux_filtered.qza \
   --p-trim-length 150 \
   --o-representative-sequences rep-seqs_<authorLastnames>.qza \
   --o-table table_<authorLastnames>.qza \
   --p-sample-stats \
-  --o-stats deblur-stats<authorLastnames>.qza`
+  --o-stats deblur-stats<authorLastnames>.qza
+```
   
 
 ## generate visualizations
