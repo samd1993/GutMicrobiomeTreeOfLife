@@ -24,7 +24,7 @@
 
 ## change directory
 
-`cd gut-microbiome/[authorLastnames]`
+`cd gutmicrobiome/[authorLastnames]`
 
   
 
