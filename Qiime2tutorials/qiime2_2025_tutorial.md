@@ -18,13 +18,13 @@
 
 ## make new directory
 
-`mkdir [authorLastnames]`
+`mkdir <authorLastnames>`
 
   
 
 ## change directory
 
-`cd gutmicrobiome/[authorLastnames]`
+`cd <authorLastnames>`
 
   
 
