@@ -8,11 +8,11 @@
 
 `conda update conda`
 
-## install qiime2 version 2023.7
+## install qiime2 version 2023.2
 
 ## activate qiime2
 
-`conda activate qiime2-2023.7`
+`conda activate qiime2-2023.2`
 
   
 
