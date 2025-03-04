@@ -40,19 +40,21 @@
 
 
 ## convert gz files to qza
-
+```
     qiime tools import \
     --type 'SampleData[SequencesWithQuality]' \
     --input-path <authorLastnames>_manifest.txt \
     --output-path <authorLastnames>_demux.qza \
     --input-format SingleEndFastqManifestPhred33V2
-  
+  ````
 ## filter by quality scores
 
-`qiime quality-filter q-score \
+```
+qiime quality-filter q-score \
  --i-demux <authorLastnames>_demux.qza \
  --o-filtered-sequences <authorLastnames>_demux_filtered.qza \
- --o-filter-stats demux-filter-stats.qza`
+ --o-filter-stats demux-filter-stats.qza
+ ```
 
 
 ## run deblur (denoising step that runs quality control on all the sequences and trims them to same length)
