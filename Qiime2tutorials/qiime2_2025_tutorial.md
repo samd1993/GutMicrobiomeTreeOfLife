@@ -44,7 +44,7 @@
     qiime tools import \
     --type 'SampleData[SequencesWithQuality]' \
     --input-path <authorLastnames>_manifest.txt \
-    --output-path [author <authorLastnames>_demux.qza \
+    --output-path <authorLastnames>_demux.qza \
     --input-format SingleEndFastqManifestPhred33V2
   
 #filter by quality scores
