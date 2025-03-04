@@ -2,13 +2,13 @@
 
 `wsl`
 
-##make sure miniconda is installed
+## make sure miniconda is installed
 
 ## update conda (if installing qiime2 for first time--if installed skip to activate qiime2 step)
 
 `conda update conda`
 
-##install qiime2 version 2023.7
+## install qiime2 version 2023.7
 
 ## activate qiime2
 
