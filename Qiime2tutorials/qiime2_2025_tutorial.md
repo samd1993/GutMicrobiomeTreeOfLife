@@ -34,18 +34,18 @@
 
 ## generate file names for manifest
 
-`ls -d "$PWD/"*`
+```ls -d "$PWD/"*```
 
   
 
 
 ## convert gz files to qza
 
-   ` qiime tools import \
+    qiime tools import \
     --type 'SampleData[SequencesWithQuality]' \
     --input-path <authorLastnames>_manifest.txt \
     --output-path <authorLastnames>_demux.qza \
-    --input-format SingleEndFastqManifestPhred33V2`
+    --input-format SingleEndFastqManifestPhred33V2
   
 ## filter by quality scores
 
