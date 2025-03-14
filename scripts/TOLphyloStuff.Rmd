@@ -558,3 +558,72 @@ devtools::install_github("wdl2459/ConQuR")
 setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/batcheffects")
 ```
 
+now trying with new table based on v3v4 and v4 and new tree with timetree names resolved
+
+```{r}
+setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")
+pgrp=as.data.frame(read.table("GrpTimeTree2_Phylum_GMTOL_unfilt.txt",sep='\t',header=TRUE))
+htre=read.tree("testtreeFeb17.nwk")
+plot(htre)
+pgrp$sampleid <- sub(" ", "_", pgrp$sampleid)
+rownames(pgrp)=pgrp$sampleid
+pgrp=pgrp[,-1]
+head(pgrp)
+
+```
+
+destroyX = function(es) {
+  f = es
+  for (col in c(1:ncol(f))){ #for each column in dataframe
+    if (startsWith(colnames(f)[col], "X") == TRUE)  { #if starts with 'X' ..
+      colnames(f)[col] <- substr(colnames(f)[col], 2, 100) #get rid of it
+    }
+  }
+  assign(deparse(substitute(es)), f, inherits = TRUE) #assign corrected data to original name
+}
+
+destroyX(table)
+head(table)
+
+```{r}
+length(htre$tip.label)
+
+nrow(pgrp)
+
+head(htre$tip.label)
+
+htips=htre$tip.label
+irow=rownames(pgrp)
+
+int=intersect(irow,htips)
+length(int)
+table2=pgrp[int,]
+nrow(table2)
+
+#prune tree to match table! nice code
+
+htre2<-drop.tip(htre,htre$tip.label[-match(int, htre$tip.label)])
+length(htre2$tip.label)
+plot(htre2)
+ape::write.tree(htre2, file = "GMTOLallFeb17.newick")
+```
+
+now making tree without V1-V3 primers
+```{r}
+setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")
+gmt=read_tsv("GrpSpeciesMetadataFeb20_25.txt")
+gmt
+
+# using subset function
+gmt2 <- subset(gmt, Primer2=="V1-V3" & reads!="NA" & Genus=="Cephalotes")
+gmt2
+print(gmt2,n=50)
+antlist=(gmt2[,"timetree3"])
+antlist2=print((antlist))
+
+htre3<-drop.tip(htre2,htre2$tip.label[match(antlist$timetree3, htre2$tip.label)])
+length(htre3$tip.label)
+plot(htre3, "f")
+ape::write.tree(htre3, file = "GMTOLallFeb20_no_ants.newick")
+```
+

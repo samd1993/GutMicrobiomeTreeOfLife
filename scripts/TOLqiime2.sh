@@ -772,7 +772,10 @@ done
 srun --time=3:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
 srun --time=4:00:00 --partition=rocky9_test --mem=64G -n 1 --pty bash -l 
 srun --time=12:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
+srun --time=1:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
 
+bash
+conda activate qiime2-2023.7
 
 
 
@@ -3961,11 +3964,96 @@ mv ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert/feature-table.biom ~/TOL/ph
 
 #now running BIRDMAN again
 
-birdman-cli run -i GMTOLsong_table2024_N20_f2all_V4_Vert.biom -o birdmanout4 -m Mar1_25_GMTOL_metadata_Vert.txt -f "Chordata"
+birdman-cli run -i ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert.biom -o birdmanout5 -m ~/TOL/phylo/Mar1_25_GMTOL_metadata_Vert.txt -f "Chordata"
 
 mv ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert/GMTOLsong_table2024_N20_f2all_V4_Vert.biom ~/TOL/phylo/
 
-#not working again so I am updating cmdstampy and arviz to match Lucas's verison (in our slack dms)
+#not working again so I am updating cmdstampy and arviz to match Lucas's which ended up helping and on to a new error though
 
-conda install -c conda-forge cmdstanpy=1.0.7 arviz=0.17.1
+conda install -c conda-forge arviz=0.17.1 cmdstanpy=1.0.7
 
+#trying coremicrobiome again
+
+qiime coremicrobiome full-pipeline --i-table ~/TOL/minich/GMTOLsong_table2024_N20_f2all_V4_2020.11.qza --p-factor DietSimp --p-group Herbivore --p-outputfile coremic.q2 --m-groupfile-file Oct24GMTOLsong_metadata_all_SampleID.txt --p-make-relative --o-visualization Herbivore_Core_V4.qzv
+
+#installing latest sra toolkit
+
+#Download the file for ubuntu system
+wget https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/current/sratoolkit.current-centos_linux64.tar.gz
+# Unzip the archive
+tar xzvf sratoolkit.current-centos_linux64.tar.gz
+
+export PATH=$PATH:~/sratoolkit.3.2.0-centos_linux64/bin
+
+#in python
+from q2sra import Proj
+proj = Proj('my_proj')
+
+proj.add_field('Hello', required = True)
+proj.add_field('Country', required = True)
+
+proj.run('BaldiBraatBangladesh2024', 'PRJNA1081952')
+
+
+#ok Now trying to add Ack Faec data to the table that I used for generating the tree fig
+
+#filter out Akkermansia muciniphila and Faecalibacterium prausnitzii from GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt.qza
+
+qiime taxa filter-table \
+  --i-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt.qza \
+  --i-taxonomy GMTOLsong_taxonomyN20all_2024f2.qza \
+  --p-include muciniphila,prausnitzii \
+  --o-filtered-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt_AkkFae.qza
+
+  #then make a taxa bar plot of the above table
+
+qiime taxa barplot \
+  --i-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt_AkkFae.qza \
+  --i-taxonomy GMTOLsong_taxonomyN20all_2024f2.qza \
+  --o-visualization GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt_AkkFae_taxa-bar.qzv
+
+  ~~~~~~~~~~~
+  #running Beta significance qiime2 on GMTOLsong_table2024_N20_f2all_V4.qza for Class 
+
+  qiime diversity beta-group-significance \
+  --i-distance-matrix ~/TOL/minich/core-metrics-phylo-results-GMTOLsong_tableN20_V4_1k/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ~/TOL/phylo/Oct24GMTOLsong_metadata_all_SampleID.txt \
+  --m-metadata-column Class \
+  --o-visualization ~/TOL/phylo/beta-significance-GMTOLsong_V4_Class-unweighted_unifrac.qzv \
+  --p-pairwise
+
+#convert GMTOLsong_table2024_N20_f2all_V4_Vert.biom to tsv
+
+biom convert -i GMTOLsong_table2024_N20_f2all_V4_Vert.biom -o GMTOLsong_table2024_N20_f2all_V4_Vert.tsv --to-tsv
+
+#filter GMTOLsong_table2024_N20_f2all_V4_Vert.qza to samples with more than 100 reads and samples with less than 200000 reads
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert.qza \
+  --p-min-frequency 100 \
+  --p-max-frequency 200000 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k.qza
+
+  #and filter features with less than 10 reads and dont show up in 2 samples
+
+qiime feature-table filter-features \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k.qza \
+  --p-min-frequency 10 \
+  --p-min-samples 2 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2.qza
+
+  #and then group them by species2
+
+qiime feature-table group \
+--i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2.qza \
+--p-axis sample \
+--m-metadata-file ~/TOL/phylo/Feb26_25_GMTOLsong_metadata_all.txt \
+--m-metadata-column 'species2' \
+--p-mode median-ceiling \
+--o-grouped-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2.qza
+
+
+#trying coremic again with lower p-min-frac to 0.5 for Chordata Vertebrate
+
+qiime coremicrobiome full-pipeline --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_2020.11.qza --p-factor Chordata --p-group Vertebrate --p-outputfile coremic.q2Vert --m-groupfile-file Feb26_25_GMTOLsong_metadata_all.txt --p-make-relative --p-min-frac 0.5 --o-visualization Vert_Core_V4_2020.11.qzv \
+--verbose
