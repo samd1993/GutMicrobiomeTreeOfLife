@@ -18,13 +18,13 @@
 
 ## make new directory
 
-`mkdir <authorLastnames>`
+`mkdir <FirstAuthorSecondAuthorCountry>`
 
   
 
 ## change directory
 
-`cd <authorLastnames>`
+`cd <FirstAuthorSecondAuthorCountry>`
 
   
 
