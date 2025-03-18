@@ -36,6 +36,14 @@
 
 ```ls -d "$PWD/"*```
 
+The copy and paste the full paths into an excel sheet like so:
+
+sampleid	absolute-filepath
+sample1	/Users/samd/gutmicrobiome/teststudy/SRR1589726_1.fastq.gz
+sample2	/Users/samd/gutmicrobiome/teststudy/SRR7528861_Caretta_caretta_S4.fastq.gz
+sample3	/Users/samd/gutmicrobiome/teststudy/SRR7528862_Caretta_caretta_S3.fastq.gz![image](https://github.com/user-attachments/assets/9a217db2-c87d-42d7-a4cd-204506d815f1)
+
+where the sampleid's are <FirstAuthorSecondAuthorCountry1> and <FirstAuthorSecondAuthorCountry2> and so on. Naming correctly will be CRITICAL for downstream analyses and trying to reverse engineer any mistakes will be very hard. So make sure to keep this file and always slack me first if you have any questions about this step! As long as you have this file we will be able to fix any issues later on.
   
 
 
