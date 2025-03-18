@@ -39,9 +39,9 @@
 The copy and paste the full paths into an excel sheet like so:
 
 ____________________________________________________________________________________________
-| sampleid |	absolute-filepath |
+| sampleid                        |	absolute-filepath                                         |
 ____________________________________________________________________________________________
-| FirstAuthorSecondAuthorCountry |	/Users/samd/gutmicrobiome/teststudy/SRR1589726_1.fastq.gz |
+| FirstAuthorSecondAuthorCountry  |	/Users/samd/gutmicrobiome/teststudy/SRR1589726_1.fastq.gz |
 _____________________________________________________________________________________________
 | FirstAuthorSecondAuthorCountry	| /Users/samd/gutmicrobiome/teststudy/SRR7528861_1.fastq.gz |
 _____________________________________________________________________________________________
