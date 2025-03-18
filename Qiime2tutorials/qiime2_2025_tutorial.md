@@ -35,6 +35,7 @@
 ## Step 1: generate file names for manifest
 
 ```ls -d -x "$PWD/"*```
+
 The above code should print out your paths as one line in your terminal for only your fastqfiles. Make sure there aren't any other fastqs in there
 
 The copy and paste the full paths into an excel sheet like so:
