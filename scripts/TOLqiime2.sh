@@ -3926,6 +3926,13 @@ conda env create -n q2-birdman-dev --file ./environments/q2-birdman-qiime2-tiny-
 module load gcc_9.3.0
 module load cmake_3.18.2
 
+#trying to install cmdstanpy first 
+pip uninstall cmdstanpy
+conda install -c conda-forge cmdstanpy=0.9.76
+#now trying conda install -c conda-forge cmdstan=2.33.1
+
+conda install -c conda-forge cmdstan=2.33.1
+
 #seems to not work above due to linux incompaitbility issues
 
 conda env create -f BIRDMAn-CLI/birdman_env.yml -n birdman
@@ -4056,4 +4063,28 @@ qiime feature-table group \
 #trying coremic again with lower p-min-frac to 0.5 for Chordata Vertebrate
 
 qiime coremicrobiome full-pipeline --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_2020.11.qza --p-factor Chordata --p-group Vertebrate --p-outputfile coremic.q2Vert --m-groupfile-file Feb26_25_GMTOLsong_metadata_all.txt --p-make-relative --p-min-frac 0.5 --o-visualization Vert_Core_V4_2020.11.qzv \
+--verboseqiime coremicrobiome full-pipeline \
+--i-table ~/TOL/minich/GMTOLsong_table2024_N20_f2all_V4_2020.11.qza \
+--p-factor Chordata \
+--p-group Vertebrate \
+--p-outputfile coremic.q2Vert \
+--m-groupfile-file Feb26_25_GMTOLsong_metadata_allVert.txt \
+--p-make-relative --p-min-frac 0.5 \
+--o-visualization Vert_Core_V4_2020.11.qzv \
 --verbose
+
+#trying to relax the p-min-frac to 0.3 and doing Class Insecta to try something smaller.
+
+qiime coremicrobiome full-pipeline \  
+--i-table ~/TOL/minich/GMTOLsong_table2024_N20_f2all_V4_2020.11.qza \
+--p-factor Class \
+--p-group Insecta \
+--p-outputfile coremic.q2Insecta \
+--m-groupfile-file Feb26_25_GMTOLsong_metadata_allVert.txt \
+--p-make-relative --p-min-frac 0.3 \
+--p-max-p 0.1 \
+--o-visualization Insecta_Core_V4_2020.11.qzv \
+--verbose
+
+
+
