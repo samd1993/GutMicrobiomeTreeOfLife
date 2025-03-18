@@ -20,6 +20,8 @@
 
 `mkdir <FirstAuthorSecondAuthorCountry>`
 
+The name should be the First Author's last name and the Second Author's last name appended to the Country. Notice how I use captial letters instead of spaces to separate words. This is a good tip for coding in general. Spaces usually lead to messy errors.
+
   
 
 ## change directory
@@ -40,8 +42,6 @@ The above code should print out your paths as one line in your terminal for only
 
 The copy and paste the full paths into an excel sheet like so:
 
-### Import table
-
 | sampleid | absolute-filepath |
 | ------------------------------- | --------------------------------------------------------- |
 | FirstAuthorSecondAuthorCountry  |	/Users/samd/gutmicrobiome/teststudy/SRR1589726_1.fastq.gz |
@@ -49,6 +49,11 @@ The copy and paste the full paths into an excel sheet like so:
 | FirstAuthorSecondAuthorCountry	| /Users/samd/gutmicrobiome/teststudy/SRR7528862_1.fastq.gz |
 
 where the sampleid's are <FirstAuthorSecondAuthorCountry1> and <FirstAuthorSecondAuthorCountry2> and so on. Naming correctly will be CRITICAL for downstream analyses and trying to reverse engineer any mistakes will be very hard. So make sure to keep this file and always slack me first if you have any questions about this step! As long as you have this file we will be able to fix any issues later on.
+
+Lastly you want to save the file as a tab delimited file. Make sure to name it as **FirstAuthorSecondAuthorCountryManifest**. This is very important as it will save this as a text file where each column is separated by tabs under the hood and it will add a .txt to the end of the fielname for you. TripleCheck that the name is correct! 
+Do not save as an excel file. You should see **FirstAuthorSecondAuthorCountryManifest.txt** wherever you saved it to.
+
+Now we want to move this manifest to your Study folder where all your fastqs are. (It's ok that this is not a fastq file since we already have the paths identified).
   
 Now we are ready to import!
 
