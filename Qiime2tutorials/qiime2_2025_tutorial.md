@@ -38,16 +38,12 @@
 
 The copy and paste the full paths into an excel sheet like so:
 
-# Import table
+### Import table
 
 | sampleid | absolute-filepath |
-
-| ______________________________ | _________________________________________________________ |
-
+| ------------------------------- | --------------------------------------------------------- |
 | FirstAuthorSecondAuthorCountry  |	/Users/samd/gutmicrobiome/teststudy/SRR1589726_1.fastq.gz |
-
 | FirstAuthorSecondAuthorCountry	| /Users/samd/gutmicrobiome/teststudy/SRR7528861_1.fastq.gz |
-
 | FirstAuthorSecondAuthorCountry	| /Users/samd/gutmicrobiome/teststudy/SRR7528862_1.fastq.gz |
 
 where the sampleid's are <FirstAuthorSecondAuthorCountry1> and <FirstAuthorSecondAuthorCountry2> and so on. Naming correctly will be CRITICAL for downstream analyses and trying to reverse engineer any mistakes will be very hard. So make sure to keep this file and always slack me first if you have any questions about this step! As long as you have this file we will be able to fix any issues later on.
