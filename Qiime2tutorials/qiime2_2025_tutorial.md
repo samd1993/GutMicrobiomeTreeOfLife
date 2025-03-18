@@ -86,11 +86,18 @@ qiime deblur denoise-16S \
   --p-sample-stats \
   --o-stats deblur-stats<FirstAuthorSecondAuthorCountry>.qza
 ```
-  
 
-## Step 5: generate visualizations
+Now we are ready to check that everything you did was write.
+So now we want to make a Metadata file. This will be simialr to the manifest except it contains actual sample info.
+So basically you want the first column to be sampleID and you can copy over what you had from the manifest (sampleIDs have to be identical)
+Then copy over the columns from our study list google sheet and you want to drag these down to fill out your metadata so we know these samples are from X country with Y disease and so on.
+
+Save this file as a tab delimited text file named **<FirstAuthourSecondAuthorCountryMetadata>.txt** -- Remember excel will automatically add the .txt part
+Move this metadata file to your study folder
+
+## Step 5: generate visualizations using your metadata file
 
     qiime feature-table summarize \
     --i-table table_<FirstAuthorSecondAuthorCountry>.qza \
     --o-visualization <FirstAuthorSecondAuthorCountry>_table.qzv \
-    --m-sample-metadata-file <FirstAuthorSecondAuthorCountry>_manifest.txt
+    --m-sample-metadata-file <FirstAuthorSecondAuthorCountry>Metadata.txt
