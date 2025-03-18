@@ -38,10 +38,12 @@
 
 The copy and paste the full paths into an excel sheet like so:
 
-##Import table
+# Import table
 
 | sampleid | absolute-filepath  |
+
 | ______________________________  | _________________________________________________________ |
+
 | FirstAuthorSecondAuthorCountry  |	/Users/samd/gutmicrobiome/teststudy/SRR1589726_1.fastq.gz |
 | FirstAuthorSecondAuthorCountry	| /Users/samd/gutmicrobiome/teststudy/SRR7528861_1.fastq.gz |
 | FirstAuthorSecondAuthorCountry	| /Users/samd/gutmicrobiome/teststudy/SRR7528862_1.fastq.gz |
