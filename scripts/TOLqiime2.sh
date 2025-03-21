@@ -772,7 +772,7 @@ done
 srun --time=3:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
 srun --time=4:00:00 --partition=rocky9_test --mem=64G -n 1 --pty bash -l 
 srun --time=12:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
-srun --time=1:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
+srun --time=8:00:00 --partition=short --mem=64G -n 4 --pty bash -l 
 
 bash
 conda activate qiime2-2023.7
@@ -3921,7 +3921,11 @@ conda activate qiime2-2024.5
 
 cd ./q2-birdman
 
-conda env create -n q2-birdman-dev --file ./environments/q2-birdman-qiime2-tiny-2025.4.yml
+git clone https://github.com/lucaspatel/q2-birdman.git
+
+cd q2-birdman
+conda env create -n q2-birdman-dev --file ./environments/q2-birdman-qiime2-tiny-2025.4-barnacle.yml
+conda activate q2-birdman-dev
 
 module load gcc_9.3.0
 module load cmake_3.18.2
@@ -4062,8 +4066,7 @@ qiime feature-table group \
 
 #trying coremic again with lower p-min-frac to 0.5 for Chordata Vertebrate
 
-qiime coremicrobiome full-pipeline --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_2020.11.qza --p-factor Chordata --p-group Vertebrate --p-outputfile coremic.q2Vert --m-groupfile-file Feb26_25_GMTOLsong_metadata_all.txt --p-make-relative --p-min-frac 0.5 --o-visualization Vert_Core_V4_2020.11.qzv \
---verboseqiime coremicrobiome full-pipeline \
+qiime coremicrobiome full-pipeline \
 --i-table ~/TOL/minich/GMTOLsong_table2024_N20_f2all_V4_2020.11.qza \
 --p-factor Chordata \
 --p-group Vertebrate \
