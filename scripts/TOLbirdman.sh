@@ -153,3 +153,58 @@ nb = NegativeBinomial(
 
 nb.compile_model()
 nb.fit_model()
+
+#trying with lucas's exact versions on barnacle
+
+conda create -n birdmanlucas python=3.10.14
+conda activate birdmanlucas
+conda install -c conda-forge cmdstanpy=1.2.4
+conda install -c conda-forge cmdstan=2.35.0
+pip install birdman==0.1.0
+
+pip install pandas
+pip install biom-format
+#script
+python
+import biom
+import pandas as pd
+import glob
+
+#fpath = glob.glob("templates/*.txt")[0]
+table = biom.load_table("GMTOLsong_table2024_N20_f2all_V4_Vert.biom")
+metadata = pd.read_csv("Mar1_25_GMTOL_metadata_Vert.txt",
+    sep="\t",
+    index_col=0
+)
+
+metadata.head()
+
+import birdman
+from birdman import NegativeBinomial
+
+nb = NegativeBinomial(
+    table=table,
+    formula="Chordata",
+    metadata=metadata,
+    show_console=True
+)
+
+nb.compile_model()
+nb.fit_model()
+from pandas import identical
+#checking that indexes and columns match
+tb=table.to_dataframe()
+idx1=pd.Index(tb.columns.values)
+idx1
+idx2=pd.Index(metadata.index.values)
+idx1.identical(idx2)
+
+ids1=idx1.sort_values()
+ids2=idx2.sort_values()
+ids1.identical(ids2)
+
+idx1.where(idx1==idx2)
+
+#was true so now im confused. not an ID problem
+nan_indices = metadata['Chordata'].isna()
+print(nan_indices.sum())
