@@ -208,3 +208,58 @@ idx1.where(idx1==idx2)
 #was true so now im confused. not an ID problem
 nan_indices = metadata['Chordata'].isna()
 print(nan_indices.sum())
+
+#trying birdman on filtered GrpSpcies data
+
+GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2.biom
+GrpSpeciesMetadataFeb20_25_underscore.txt
+
+import biom
+import pandas as pd
+import glob
+
+#fpath = glob.glob("templates/*.txt")[0]
+table = biom.load_table("GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2.biom")
+metadata = pd.read_csv("GrpSpeciesMetadataFeb20_25_underscore.txt",
+    sep="\t",
+    index_col=0
+)
+
+metadata.head()
+
+tb=table.to_dataframe()
+tb.head()
+
+#filter metadata to only include samples in table even if it has values that aren't in the table
+
+metadata2=metadata.loc[metadata.index.isin(tb.columns)]
+metadata2.head()
+
+idx1=pd.Index(tb.columns.values)
+idx1
+idx2=pd.Index(metadata2.index.values)
+idx1.identical(idx2)
+
+ids1=idx1.sort_values()
+ids2=idx2.sort_values()
+ids1.identical(ids2)
+
+len(tb.columns)
+len(metadata2)
+
+#now trying birdman
+
+import birdman
+from birdman import NegativeBinomial
+
+nb = NegativeBinomial(
+    table=table,
+    formula="Chordata",
+    metadata=metadata2
+)
+
+nb.compile_model()
+nb.fit_model()
+
+
+

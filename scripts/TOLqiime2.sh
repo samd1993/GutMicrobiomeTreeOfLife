@@ -769,13 +769,14 @@ for file in *.qza; do
     echo "Finishing deblur job"
 done
 
-srun --time=1:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
+srun --time=1:00:00 --partition=short --mem=4G -n 1 --pty bash -l 
 srun --time=4:00:00 --partition=rocky9_test --mem=64G -n 1 --pty bash -l 
 srun --time=12:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
-srun --time=8:00:00 --partition=short --mem=64G -n 4 --pty bash -l 
+srun --time=24:00:00 --partition=short --mem=64G -n 4 --pty bash -l 
 
 bash
 conda activate qiime2-2023.7
+conda activate /home/sdegregori/miniconda3/envs/qiime2-2023.7
 
 
 
@@ -4089,5 +4090,43 @@ qiime coremicrobiome full-pipeline \
 --o-visualization Insecta_Core_V4_2020.11.qzv \
 --verbose
 
+~~~~~~~~~~~~~~~
+
+#Filtering ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2.qza to only include Class equal to Insecta and Mammalia
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2.qza \
+  --m-metadata-file ~/TOL/phylo/Feb26_25_GMTOLsong_metadata_all.txt \
+  --p-where "Class='Insecta' OR Class='Mammalia'" \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_InsectaMamm.qza
 
 
+#summarize GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2.qza with GrpSpeciesmetadata
+
+#filter table and metadata
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2.qza \
+  --m-metadata-file ~/TOL/phylo/GrpSpeciesMetadataFeb20_25_underscore.txt \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2.qza
+
+qiime feature-table summarize \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2.qza \
+  --m-sample-metadata-file ~/TOL/phylo/GrpSpeciesMetadataFeb20_25_underscore.txt \
+  --o-visualization ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2.qzv
+
+#convert table to biom
+
+qiime tools export --input-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2.qza --output-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2
+
+change the name of the biom file to GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2.biom
+
+mv ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2/feature-table.biom ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2.biom
+
+#filter table to only include Class==Mammalia or Chordata==Invertebrate
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2.qza \
+  --m-metadata-file ~/TOL/phylo/GrpSpeciesMetadataFeb20_25_underscore.txt \
+  --p-where "Class='Mammalia' OR Chordata='Invertebrate'" \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2_MamInvert.qza
