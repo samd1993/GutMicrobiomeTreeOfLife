@@ -769,15 +769,17 @@ for file in *.qza; do
     echo "Finishing deblur job"
 done
 
-srun --time=1:00:00 --partition=short --mem=4G -n 1 --pty bash -l 
+srun --time=1:00:00 --partition=short --mem=120G -n 1 --pty bash -l 
+
 srun --time=4:00:00 --partition=rocky9_test --mem=64G -n 1 --pty bash -l 
 srun --time=12:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
 srun --time=24:00:00 --partition=short --mem=64G -n 4 --pty bash -l 
 
 bash
 conda activate qiime2-2023.7
-conda activate /home/sdegregori/miniconda3/envs/qiime2-2023.7
 
+conda activate /home/sdegregori/miniconda3/envs/qiime2-2023.7
+conda activate /home/sdegregori/miniconda3/envs/birdmanlucas
 
 
 
@@ -4130,3 +4132,47 @@ qiime feature-table filter-samples \
   --m-metadata-file ~/TOL/phylo/GrpSpeciesMetadataFeb20_25_underscore.txt \
   --p-where "Class='Mammalia' OR Chordata='Invertebrate'" \
   --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2_MamInvert.qza
+
+
+
+#now I would like to make a table with just Fusobacterium species GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt.qza
+
+#convert GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt.qza to relative abundance
+
+qiime feature-table relative-frequency \
+  --i-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt.qza \
+  --o-relative-frequency-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt_rel.qza
+
+#below doesnt accept relative freq so I use original 
+qiime taxa filter-table \
+  --i-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt.qza \
+  --i-taxonomy GMTOLsong_taxonomyN20all_2024f2.qza \
+  --p-include "Fusobacterium" \
+  --o-filtered-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt_Fusobacterium.qza
+
+#collapse above table to species
+
+qiime taxa collapse \
+  --i-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt_Fusobacterium.qza \
+  --i-taxonomy GMTOLsong_taxonomyN20all_2024f2.qza \
+  --p-level 7 \
+  --o-collapsed-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt_Fusobacterium_species.qza
+
+  #export the filtered Fusobacterium table to biom and then tsv
+
+qiime tools export \
+  --input-path GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt_Fusobacterium_species.qza \
+  --output-path ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt_Fusobacterium_species
+biom convert \
+  -i ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt_Fusobacterium_species/feature-table.biom \
+  -o ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt_Fusobacterium_species.tsv \
+  --to-tsv
+
+
+  ~~~~~~~~
+  #converting this into above 100 reads GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2.qza features use filter-features to only features with more than 100 reads
+
+qiime feature-table filter-features \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2.qza \
+  --p-min-frequency 100 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.qza
