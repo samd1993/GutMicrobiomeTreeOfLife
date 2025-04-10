@@ -769,7 +769,7 @@ for file in *.qza; do
     echo "Finishing deblur job"
 done
 
-srun --time=1:00:00 --partition=short --mem=120G -n 1 --pty bash -l 
+srun --time=1:00:00 --partition=short --mem=16G -n 1 --pty bash -l 
 
 srun --time=4:00:00 --partition=rocky9_test --mem=64G -n 1 --pty bash -l 
 srun --time=12:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
@@ -4176,3 +4176,23 @@ qiime feature-table filter-features \
   --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2.qza \
   --p-min-frequency 100 \
   --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.qza
+
+  #install wget with homebrew (doing for this mac mini to work off barancle)
+
+brew install wget
+
+#some of this code mightve been done on DUmpy so watch for paths
+
+
+qiime feature-table filter-features \
+  --i-table GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2_Grpspecies2.qza \
+  --p-min-frequency 100 \
+  --o-filtered-table GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.qza
+
+  #then export and convert biom to tsv
+
+qiime tools export \
+  --input-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.qza \
+  --output-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2
+
+mv ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2/feature-table.biom ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.biom
