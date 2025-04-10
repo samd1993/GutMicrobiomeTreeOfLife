@@ -327,72 +327,69 @@ idv2
 idm2=pd.Index(mtxt.index.values)
 idm2
 
+~~~~~~~~~~~~~
+#trying this on ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2species2.biom with metadata file GrpSpeciesMetadataFeb20_25_underscore.txt
+
+import biom
+import pandas as pd
+import glob
 
 
+table = biom.load_table("GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.biom")
+metaf = pd.read_csv("GrpSpeciesMetadataFeb20_25_underscore.txt",
+    sep="\t",
+    index_col=0,
+    dtype={"sample_name": str}
+)
 
-#Error from test data:
-12:35:49 - cmdstanpy - INFO - CmdStan start processing
-chain 1 |                                                                                                                      | 00:00 Statu12:35:49 - cmdstanpy - ERROR - Chain [1] error: terminated by signal 11 Unknown error -11                                       | 00:00 Status
-12:35:49 - cmdstanpy - ERROR - Chain [2] error: terminated by signal 11 Unknown error -11                                      | 00:00 Status
-12:35:49 - cmdstanpy - ERROR - Chain [3] error: terminated by signal 11 Unknown error -11                                      | 00:00 Status
-12:35:49 - cmdstanpy - ERROR - Chain [4] error: terminated by signal 11 Unknown error -11
-chain 1 |██████████████████████████████████████████████████████████████████████████████████████████████████████████| 00:00 Sampling completed
-chain 2 |██████████████████████████████████████████████████████████████████████████████████████████████████████████| 00:00 Sampling completed
-chain 3 |██████████████████████████████████████████████████████████████████████████████████████████████████████████| 00:00 Sampling completed
-chain 4 |██████████████████████████████████████████████████████████████████████████████████████████████████████████| 00:00 Sampling completed
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
-12:35:49 - cmdstanpy - INFO - CmdStan done processing.
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-  File "/home/sdegregori/miniconda3/envs/birdmanlucas/lib/python3.10/site-packages/birdman/model_base.py", line 158, in fit_model
-    _fit = self.sm.sample(
-  File "/home/sdegregori/miniconda3/envs/birdmanlucas/lib/python3.10/site-packages/cmdstanpy/model.py", line 1136, in sample
-    raise RuntimeError(msg)
-RuntimeError: Error during sampling:
+metaf.head()
 
-Command and output files:
-RunSet: chains=4, chain_ids=[1, 2, 3, 4], num_processes=4
- cmd (chain 1):
-        ['/home/sdegregori/miniconda3/envs/birdmanlucas/lib/python3.10/site-packages/birdman/templates/negative_binomial', 'id=1', 'random', 'seed=42', 'data', 'file=/tmp/tmpb2i8973u/yw9ctrgm.json', 'output', 'file=/tmp/tmpb2i8973u/negative_binomialmjdzkqyd/negative_binomial-20250402123549_1.csv', 'method=sample', 'num_samples=500', 'num_warmup=500', 'algorithm=hmc', 'adapt', 'engaged=1']
- retcodes=[-11, -11, -11, -11]
- per-chain output files (showing chain 1 only):
- csv_file:
-        /tmp/tmpb2i8973u/negative_binomialmjdzkqyd/negative_binomial-20250402123549_1.csv
- console_msgs (if any):
-        /tmp/tmpb2i8973u/negative_binomialmjdzkqyd/negative_binomial-20250402123549_0-stdout.txt
-Consider re-running with show_console=True if the above output is unclear!
+tb=table.to_dataframe()
+tb.head()
+tb.shape
+metaf.shape
+
+metaf2=metaf.loc[metaf.index.isin(tb.columns)]
+metaf2.head()
+metaf2.shape
+
+metaf2.index.names = ['sample_name']
+metaf2 = metaf2.set_index(['sample_name']) #doesnt work prob cuz sample_name already is index
+metaf2.head()
+
+idx1=pd.Index(tb.columns.values)
+idx1
+idx2=pd.Index(metaf2.index.values)
+idx1.identical(idx2)
+
+ids1=idx1.sort_values()
+ids2=idx2.sort_values()
+ids1.identical(ids2)
 
 
-#and on GMTOL data
+import birdman
+from birdman import NegativeBinomial
 
->>> nb.fit_model()
-13:03:11 - cmdstanpy - INFO - CmdStan start processing
-chain 1 |                                                                                                                      | 00:00 Statu13:03:11 - cmdstanpy - ERROR - Chain [1] error: terminated by signal 11 Unknown error -11                                       | 00:00 Status
-13:03:11 - cmdstanpy - ERROR - Chain [2] error: terminated by signal 11 Unknown error -11                                      | 00:00 Status
-13:03:11 - cmdstanpy - ERROR - Chain [3] error: terminated by signal 11 Unknown error -11                                      | 00:00 Status
-13:03:12 - cmdstanpy - ERROR - Chain [4] error: terminated by signal 11 Unknown error -11
-chain 1 |██████████████████████████████████████████████████████████████████████████████████████████████████████████| 00:00 Sampling completed
-chain 2 |██████████████████████████████████████████████████████████████████████████████████████████████████████████| 00:00 Sampling completed
-chain 3 |██████████████████████████████████████████████████████████████████████████████████████████████████████████| 00:00 Sampling completed
-chain 4 |██████████████████████████████████████████████████████████████████████████████████████████████████████████| 00:00 Sampling completed
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
-13:03:12 - cmdstanpy - INFO - CmdStan done processing.
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-  File "/home/sdegregori/miniconda3/envs/birdmanlucas/lib/python3.10/site-packages/birdman/model_base.py", line 158, in fit_model
-    _fit = self.sm.sample(
-  File "/home/sdegregori/miniconda3/envs/birdmanlucas/lib/python3.10/site-packages/cmdstanpy/model.py", line 1136, in sample
-    raise RuntimeError(msg)
-RuntimeError: Error during sampling:
+nb = NegativeBinomial(
+    table=table,
+    formula="Chordata",
+    metadata=metaf2
+)
 
-Command and output files:
-RunSet: chains=4, chain_ids=[1, 2, 3, 4], num_processes=4
- cmd (chain 1):
-        ['/home/sdegregori/miniconda3/envs/birdmanlucas/lib/python3.10/site-packages/birdman/templates/negative_binomial', 'id=1', 'random', 'seed=42', 'data', 'file=/tmp/tmphxz8txco/xn_4vgd0.json', 'output', 'file=/tmp/tmphxz8txco/negative_binomialqi_hrrc4/negative_binomial-20250402130311_1.csv', 'method=sample', 'num_samples=500', 'num_warmup=500', 'algorithm=hmc', 'adapt', 'engaged=1']
- retcodes=[-11, -11, -11, -11]
- per-chain output files (showing chain 1 only):
- csv_file:
-        /tmp/tmphxz8txco/negative_binomialqi_hrrc4/negative_binomial-20250402130311_1.csv
- console_msgs (if any):
-        /tmp/tmphxz8txco/negative_binomialqi_hrrc4/negative_binomial-20250402130311_0-stdout.txt
-Consider re-running with show_console=True if the above output is unclear!
+nb.compile_model()
+nb.fit_model()
+
+#still get same error
+
+#write tsv of metaf2
+
+metaf2.to_csv("GrpSpeciesMetadataFeb20_25_underscore_filtered.tsv", sep="\t")
+
+mv GrpSpeciesMetadataFeb20_25_underscore_filtered.tsv /ddn_scratch/sdegregori/birdmantest/GrpSpeciesMetadataApr10_25_underscore_filtered.tsv
+
+#move the biom file as well
+
+mv GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.biom /ddn_scratch/sdegregori/birdmantest/lucas_table_Grpspecies2.biom
+
+mv /ddn_scratch/sdegregori/birdmantest/GrpSpeciesMetadataApr10_25_underscore_filtered.tsv /ddn_scratch/sdegregori/birdmantest/lucas_metadata_Grpspecies2.tsv
+
