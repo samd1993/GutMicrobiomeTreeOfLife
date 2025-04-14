@@ -4195,4 +4195,5 @@ qiime tools export \
   --input-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.qza \
   --output-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2
 
+
 mv ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2/feature-table.biom ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.biom

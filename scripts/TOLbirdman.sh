@@ -393,3 +393,31 @@ mv GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.biom /d
 
 mv /ddn_scratch/sdegregori/birdmantest/GrpSpeciesMetadataApr10_25_underscore_filtered.tsv /ddn_scratch/sdegregori/birdmantest/lucas_metadata_Grpspecies2.tsv
 
+#I need to filter biom and taxnoomy table
+
+import biom
+import pandas as pd
+import glob
+
+table = biom.load_table("lucas_table_Grpspecies2.biom")
+tax = pd.read_csv("GMTOL_jian_taxonomy.tsv",
+    sep="\t",
+    index_col=0
+)
+tax.head()
+tax.shape
+
+tb=table.to_dataframe()
+tb.head()
+
+tb.shape
+
+#filter tax to match table feature IDs
+
+tax2 = tax.loc[tax.index.isin(tb.index)]
+tax2.head()
+tax2.shape
+
+write tsv of tax2
+tax2.to_csv("lucas_taxonomy_Grpspecies2.tsv", sep="\t")
+
