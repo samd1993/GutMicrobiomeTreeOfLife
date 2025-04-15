@@ -421,3 +421,86 @@ tax2.shape
 write tsv of tax2
 tax2.to_csv("lucas_taxonomy_Grpspecies2.tsv", sep="\t")
 
+#so now I want to append yes no columns for each Class to the metadata table for specific Class levels with python
+
+import pandas as pd
+import biom
+import glob
+import numpy as np
+import os
+
+table = biom.load_table("lucas_table_filtered2.biom")
+tax = pd.read_csv("GMTOL_jian_taxonomy.tsv",
+    sep="\t",
+    index_col=0
+)
+metadata = pd.read_csv("Feb26_25_GMTOLsong_metadata_allVert.txt",
+    sep="\t",
+    index_col=0
+)
+tb=table.to_dataframe()
+tb
+
+metadata2=metadata.loc[metadata.index.isin(tb.columns)]
+idx1=pd.Index(tb.columns.values)
+idx1
+idx2=pd.Index(metadata2.index.values)
+idx1.identical(idx2)
+
+ids1=idx1.sort_values()
+ids2=idx2.sort_values()
+ids1.identical(ids2)
+
+#for Class in metadata2 replace Petromyzontida with Hyperoartia but fix the SettingWithCopy warning
+metadata2 = metadata2.copy()
+metadata2['Class'] = metadata2['Class'].replace('Petromyzontida', 'Hyperoartia')
+
+#print out unqique Class levels in metadata file and then how many sampleIDs they each have
+unique_classes = metadata2['Class'].unique()
+print(unique_classes)
+class_counts = metadata2['Class'].value_counts()
+print(class_counts)
+
+#for each Class leve in the metadata file, make a new column with yes no values but do this automatically for all of them. Make this like a for loop through each Class level where you append a new yes no column for each to the metadata2 dataframe and finish the for loop completely because as of now you keep doing half of it and stopping
+#ok had to use chatGPT
+metadata3=metadata2
+
+for level in metadata3['Class'].unique():
+    metadata3[f'{level}_yes_no'] = metadata3['Class'].apply(lambda x: f'{level}' if x == level else 'no')
+
+metadata3
+
+#print metadata3 columns
+metadata3.columns
+
+#remove the nan_yes_no column
+metadata3 = metadata3.drop(columns=['nan_yes_no'])
+
+#write metadata3 to tsv as 'lucas_metadata_filtered2.tsv'
+metadata3.to_csv("lucas_metadata_filtered2.tsv", sep="\t")
+
+metadata3
+tb
+
+#filter tax to match tb features
+
+tax2 = tax.loc[tax.index.isin(tb.index)]
+tax2
+#write tax2 to tsv as 'lucas_taxonomy_filtered2.tsv'
+tax2.to_csv("lucas_taxonomy_filtered2.tsv", sep="\t")
+
+
+
+
+
+
+
+
+
+#for tb print out the top 30 columns that have the highest sums of counts
+
+tb_sum = tb.sum(axis=0)
+top_30_columns = tb_sum.nlargest(30).index
+#print out the top 30 columns with their sums
+top_30_sums = tb_sum.nlargest(30)
+print(top_30_sums)

@@ -777,7 +777,7 @@ srun --time=24:00:00 --partition=short --mem=64G -n 4 --pty bash -l
 
 bash
 conda activate qiime2-2023.7
-
+df -h
 conda activate /home/sdegregori/miniconda3/envs/qiime2-2023.7
 conda activate /home/sdegregori/miniconda3/envs/birdmanlucas
 
@@ -4197,3 +4197,194 @@ qiime tools export \
 
 
 mv ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2/feature-table.biom ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.biom
+
+
+#filtering GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2.qza for birdman. First export it
+
+qiime tools export \
+  --input-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2.qza \
+  --output-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2
+
+#filter the qza table to only include reads present in 3 samples or more
+qiime feature-table filter-features \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2.qza \
+  --p-min-samples 3 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_3.qza
+
+  #and then 5
+
+qiime feature-table filter-features \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2.qza \
+  --p-min-samples 5 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_5.qza
+
+  #and then 10
+
+qiime feature-table filter-features \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2.qza \
+  --p-min-samples 10 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_10.qza
+
+  #spit out of class by sample numbers
+
+  Mammalia           978
+Aves               638
+Actinopterygii     565
+Insecta            404
+Reptilia           309
+Amphibia           181
+Bivalvia            68
+Petromyzontida      39
+Malacostraca        38
+Anthozoa            29
+Saline              26
+Ophiuroidea         23
+Hyperoartia         20
+algae               20
+Clitellata          20
+Chondrichthyes      20
+Arachnida           19
+Echinoidea          18
+water               18
+Non-saline          15
+Cephalochordata      6
+Sarcopterygii        5
+
+#filter and exclude from GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_5samples.qza Class that is not equal to Non-saline, Sarcopterygii, Cephalochordata, water, algae, Saline
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_5samples.qza \
+  --m-metadata-file ~/TOL/phylo/Feb26_25_GMTOLsong_metadata_all.txt \
+  --p-exclude-ids \
+  --p-where "Class='Non-saline' OR Class='Sarcopterygii' OR Class='Cephalochordata' OR Class='water' OR Class='algae' OR Class='Saline'" \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_5f.qza
+
+  #filter above table to have reads with more than 150 counts
+
+qiime feature-table filter-features \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_5f.qza \
+  --p-min-frequency 150 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_150_200k_10_5f.qza
+
+#and then try filtering samples with less than 100k reads
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_150_200k_10_5f.qza \
+  --p-min-frequency 100000 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_150_100k_10_5f.qza
+
+#and then try same above code of filtering samples to 100k but on GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2 table
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2.qza \
+  --p-min-frequency 100000 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_100k_10_2.qza
+
+#seems like 3 is a good in between number to filter to for reads in certain number of samples 
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_3.qza \
+  --m-metadata-file ~/TOL/phylo/Feb26_25_GMTOLsong_metadata_all.txt \
+  --p-exclude-ids \
+  --p-where "Class='Non-saline' OR Class='Sarcopterygii' OR Class='Cephalochordata' OR Class='water' OR Class='algae' OR Class='Saline'" \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_3f.qza
+
+#and then do samples to 100k
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_3f.qza \
+  --p-min-frequency 100000 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_100k_10_3f.qza
+
+  #and then export the above table
+
+qiime tools export \
+  --input-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_100k_10_3f.qza \
+  --output-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_100k_10_3f
+
+cp ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_100k_10_3f/feature-table.biom ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_100k_10_3f.biom
+
+#try everythiing again on GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_100k_10_2.qza
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2.qza \
+  --m-metadata-file ~/TOL/phylo/Feb26_25_GMTOLsong_metadata_all.txt \
+  --p-exclude-ids \
+  --p-where "Class='Non-saline' OR Class='Sarcopterygii' OR Class='Cephalochordata' OR Class='water' OR Class='algae' OR Class='Saline'" \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2f.qza
+
+#and then do samples to 100k
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_10_2f.qza \
+  --p-min-frequency 100000 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_100k_10_2f.qza
+
+  #export the above table
+
+qiime tools export \
+  --input-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_100k_10_2f.qza \
+  --output-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_100k_10_2f
+
+cp ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_100k_10_2f/feature-table.biom ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_100k_10_2f.biom
+
+#and then send biom to ddn_scratch
+
+cp ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_100k_10_2f.biom /ddn_scratch/sdegregori/lucas_table_filtered.biom
+
+#do the same thing to GMTOLsong_table2024_N20_f2all_V4_Vert.qza where you filter by the unwanted classes and then more than 100 reads per feature and then reads that show up at least 5 times
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert.qza \
+  --m-metadata-file ~/TOL/phylo/Feb26_25_GMTOLsong_metadata_all.txt \
+  --p-exclude-ids \
+  --p-where "Class='Non-saline' OR Class='Sarcopterygii' OR Class='Cephalochordata' OR Class='water' OR Class='algae' OR Class='Saline'" \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf.qza
+
+#then features to 100
+
+qiime feature-table filter-features \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf.qza \
+  --p-min-frequency 100 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf_100.qza
+
+#and then do features that show up in 5 samples or more
+
+qiime feature-table filter-features \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf_100.qza \
+  --p-min-samples 5 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf_100_5.qza
+
+  #summarize the table
+
+qiime feature-table summarize \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf_100_5.qza \
+  --m-sample-metadata-file ~/TOL/phylo/Feb26_25_GMTOLsong_metadata_all.txt \
+  --o-visualization ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf_100_5.qzv
+
+  #now do samples with more than 100 reads but less than 100k reads
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf_100_5.qza \
+  --p-min-frequency 100 \
+  --p-max-frequency 100000 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf_100-100k_100_5.qza
+
+  #and then export it 
+
+qiime tools export \
+  --input-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf_100-100k_100_5.qza \
+  --output-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf_100-100k_100_5
+
+cp ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf_100-100k_100_5/feature-table.biom ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf_100-100k_100_5.biom
+
+#and then send biom to ddn_scratch
+cp ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf_100-100k_100_5.biom /ddn_scratch/sdegregori/lucas_table_filtered.biom
+
+cp ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf_100-100k_100_5.biom /ddn_scratch/sdegregori/
+
+#summarize the table
+qiime feature-table summarize \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf_100-100k_100_5.qza \
+  --m-sample-metadata-file ~/TOL/phylo/Feb26_25_GMTOLsong_metadata_all.txt \
+  --o-visualization ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf_100-100k_100_5.qzv
