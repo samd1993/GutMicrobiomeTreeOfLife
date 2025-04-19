@@ -4388,3 +4388,23 @@ qiime feature-table summarize \
   --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf_100-100k_100_5.qza \
   --m-sample-metadata-file ~/TOL/phylo/Feb26_25_GMTOLsong_metadata_all.txt \
   --o-visualization ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertf_100-100k_100_5.qzv
+
+  #~~~~~~~~~~~~~~~~~ looking at V3-V4 data
+#filter GMTOLsong_table2024_N20_f2all_f.qza to only include V3-V4 samples
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/minich/GMTOLsong_table2024_N20_f2all_f.qza \
+  --m-metadata-file ~/TOL/phylo/Feb26_25_GMTOLsong_metadata_all.txt \
+  --p-where "Primer2='V3-V4'" \
+  --o-filtered-table ~/TOL/V3-V4/GMTOLsong_table2024_N20_f2all_V3V4.qza
+
+  #run core metrics on V3-V4 data
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ~/TOL/minich/GMTOLsong_rooted_tree2024f2.qza \
+  --i-table ~/TOL/V3-V4/GMTOLsong_table2024_N20_f2all_V3V4.qza \
+  --p-sampling-depth 400 \
+  --m-metadata-file ~/TOL/phylo/Feb26_25_GMTOLsong_metadata_all.txt \
+  --output-dir ~/TOL/V3-V4/core-metrics-phylo-results-GMTOLsong_tableN20_V3V4_400
+
+

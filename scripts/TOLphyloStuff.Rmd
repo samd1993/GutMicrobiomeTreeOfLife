@@ -336,7 +336,7 @@ cb=cbind(coef(summary(model)),r2)
 ```{r}
 #geom code for Firmicutes
 
-gF=ggplot(cothtable5f, aes(x=Homo_sapiens, y=d__Bacteria.p__Firmicutes_A/1000)) +
+gF=ggplot(cothtable5, aes(x=Homo_sapiens, y=d__Bacteria.p__Firmicutes_A/1000)) +
   geom_point(alpha=0.3) +
   ylim(0,1.0)+
   ylab("Rel. Abund. of Firmicutes")+
@@ -347,8 +347,8 @@ gF=ggplot(cothtable5f, aes(x=Homo_sapiens, y=d__Bacteria.p__Firmicutes_A/1000)) 
      theme(axis.title.x = element_text(color="black",size=12))+
      theme(axis.text.x = element_text(color="black",size=10),
          axis.text.y = element_text(color="black", 
-                                    size=10))+
-                                    theme(plot.margin = unit(c(0.8,0.8,0.8,0.8), "cm"))
+                                    size=10))
+                                
                                     
  
   gF
@@ -360,7 +360,7 @@ gF=ggplot(cothtable5f, aes(x=Homo_sapiens, y=d__Bacteria.p__Firmicutes_A/1000)) 
 
 
 ```{r}
-gP=ggplot(cothtable5f, aes(x=Homo_sapiens, y=d__Bacteria.p__Proteobacteria/1000)) +
+gP=ggplot(cothtable5, aes(x=Homo_sapiens, y=d__Bacteria.p__Proteobacteria/1000)) +
   geom_point(alpha=0.5) +
   ylab("Rel. Abund. of Proteobacteria")+
   xlab('Divergence distance from Homo sapiens')+
@@ -370,7 +370,7 @@ gP=ggplot(cothtable5f, aes(x=Homo_sapiens, y=d__Bacteria.p__Proteobacteria/1000)
 ```
 
 ```{r}
-gB=ggplot(cothtable5f, aes(x=Homo_sapiens, y=d__Bacteria.p__Bacteroidota /1000)) +
+gB=ggplot(cothtable5, aes(x=Homo_sapiens, y=d__Bacteria.p__Bacteroidota /1000)) +
   geom_point(alpha=0.5) +
   ylab("Rel. Abund. of Bacteroidota")+
   xlab('Divergence distance from Homo sapiens')+
@@ -390,7 +390,10 @@ replicate(999,
       m21
    cothtable5f = merge(cothtable5, m21, by='sampleid')
   
-   modelp <- lm(d__Bacteria.p__Proteobacteria ~ Homo_sapiens, data = cothtable5f)
+   modelp <- lm(d__Bacteria.p__Proteobacteria ~ Homo_sapiens, data = cothtable5)
+summary(modelp)
+
+ modelp <- lm(d__Bacteria.p__Bacteroidota ~ Homo_sapiens, data = cothtable5)
 summary(modelp)
 
 
@@ -490,7 +493,9 @@ gAlph=ggplot(cothtableAlphf, aes(x=Homo_sapiens, y=d__Bacteria.p__Proteobacteria
 
 
 plot_grid(gP,gF,gB,gAlph,gClost,gBact)
-  
+
+library(cowplot)
+plot_grid(gP,gF,gB,nrow=1,scale=0.9)
 
 
 
@@ -625,5 +630,29 @@ htre3<-drop.tip(htre2,htre2$tip.label[match(antlist$timetree3, htre2$tip.label)]
 length(htre3$tip.label)
 plot(htre3, "f")
 ape::write.tree(htre3, file = "GMTOLallFeb20_no_ants.newick")
+```
+
+Trying the ancestral reconstruction script
+
+```{r}
+install.packages("mvMORPH")
+install.packages("RPANDA")
+install.packages("rstan")
+```
+
+```{r}
+library(ggplot2)
+library(mvMORPH)
+library(RPANDA)
+library(rstan)
+rstan_options(auto_write = TRUE)
+library(RColorBrewer)
+```
+
+#writing this code in mac mini: note working directories
+
+```{r}
+ setwd("~/OneDrive - University of California, San Diego Health/TOL2024/phylo")
+pgrp=as.data.frame(read.table("GrpTimeTree2_Phylum_GMTOL_unfilt.txt",sep='\t',header=TRUE))
 ```
 

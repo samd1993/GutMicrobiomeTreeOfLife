@@ -1,0 +1,87 @@
+---
+title: "GMTOL ancestral state reconstruction"
+output: html_document
+date: "2025-04-17"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Ancestral State Reconstruction of GMToL data
+
+```{r}
+library(ggplot2)
+library(mvMORPH)
+library(RPANDA)
+library(rstan)
+rstan_options(auto_write = TRUE)
+library(RColorBrewer)
+```
+
+#writing this code in mac mini: note working directories
+
+```{r}
+ setwd("~/OneDrive - University of California, San Diego Health/TOL2024/phylo")
+pgrp=as.data.frame(read.table("GrpTimeTree2_Phylum_GMTOL_unfilt.txt",sep='\t',header=TRUE))
+pgrp
+
+pgrp$sampleid <- sub(" ", "_", pgrp$sampleid)
+rownames(pgrp)=pgrp$sampleid
+pgrp=pgrp[,-1]
+head(pgrp)
+
+ setwd("~/OneDrive - University of California, San Diego Health/TOL2024/phylo")
+htre=read.tree("GMTOLallFeb20_no_ants.newick")
+plot(htre)
+
+length(htre$tip.label)
+
+nrow(pgrp)
+
+head(htre$tip.label)
+
+htips=htre$tip.label
+irow=rownames(pgrp)
+
+int=intersect(irow,htips)
+length(int)
+table2=pgrp[int,]
+nrow(table2)
+#t2t=t(table2)
+
+#prune tree to match table! nice code
+
+htre2<-drop.tip(htre,htre$tip.label[-match(int, htre$tip.label)])
+length(htre2$tip.label)
+plot(htre2)
+#ape::write.tree(htre2, file = "GMTOLallFeb17.newick")
+```
+#so now I have htre2 and table2 both filtered to 826 species..running ABDOMEN
+```{r}
+ setwd("~/OneDrive - University of California, San Diego Health/TOL2024/phylo")
+source("ABDOMEN.R")
+
+name <- "run_GMToL_phyla" # the name of the run
+
+code_path <- getwd() # indicates where the stan codes are stored (here, there are directly stored in the working directory) and where the ABDOMEN plots will be generated.
+
+detection_threshold <- 1e-05 # the detection threshold: below this threshold, we assume that we cannot detect the microbial taxa (either because it is not present or because we cannot detect very rare taxa with metabarcoding techniques). Then, all relative abundances below this threshold are set to this threshold. 
+
+seed <- 3 # seed for reproductibility
+
+mean_prior_logY <- 0 # mean value for the Gaussian prior of logY (the latent variables that correspond to the total microbial abundances, relative to the ancestral ones)
+sd_prior_logY <- 2  # standard deviation for the Gaussian prior of logY (the latent variables that correspond to the total microbial abundances, relative to the ancestral ones)
+
+nb_cores <- 4 # number of cores to run the analyses
+chains <-  4 # number of chains for the inference
+warmup <-  1000 # number of warmup iterations in STAN
+iter <-  2000 # total number of iterations in STAN
+
+fit_summary <- ABDOMEN(htre2, table2, name, 
+                       code_path = code_path,
+                       detection_threshold = detection_threshold, seed = seed, 
+                       mean_prior_logY = mean_prior_logY, sd_prior_logY = sd_prior_logY,
+                       nb_cores = nb_cores, chains = chains, warmup = warmup, iter = iter)
+```
+
