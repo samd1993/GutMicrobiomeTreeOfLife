@@ -4407,4 +4407,27 @@ qiime diversity core-metrics-phylogenetic \
   --m-metadata-file ~/TOL/phylo/Feb26_25_GMTOLsong_metadata_all.txt \
   --output-dir ~/TOL/V3-V4/core-metrics-phylo-results-GMTOLsong_tableN20_V3V4_400
 
+#collapsing GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100.qza to Order level with GMTOL taxonomy f2all. Note that for phyla I used a taxa bar output and I THINK its from the same source just maybe unfiltered.
 
+qiime taxa collapse \
+  --i-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100.qza \
+  --i-taxonomy GMTOLsong_taxonomyN20all_2024f2.qza \
+  --p-level 4 \
+  --o-collapsed-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100_Order.qza
+
+  #convert to relative abund
+
+qiime feature-table relative-frequency \
+  --i-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100_Order.qza \
+  --o-relative-frequency-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100_Order_rel.qza 
+
+#export the table to biom and tsv
+
+qiime tools export \
+  --input-path GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100_Order_rel.qza \
+  --output-path ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100_Order_rel
+
+  biom convert \
+  -i ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100_Order_rel/feature-table.biom \
+  -o ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100_Order_rel.tsv \
+  --to-tsv
