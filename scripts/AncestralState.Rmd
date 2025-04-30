@@ -9,6 +9,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 #Ancestral State Reconstruction of GMToL data
+```{r}
+install.packages("funrar")
+```
 
 ```{r}
 library(ggplot2)
@@ -17,6 +20,7 @@ library(RPANDA)
 library(rstan)
 rstan_options(auto_write = TRUE)
 library(RColorBrewer)
+library(funrar)
 ```
 
 #writing this code in mac mini: note working directories
@@ -48,6 +52,10 @@ int=intersect(irow,htips)
 length(int)
 table2=pgrp[int,]
 nrow(table2)
+rt2=make_relative(as.matrix(table2))
+rt2=as.data.frame(rt2)
+rt2m=as.matrix(rt2)
+rt3=t(rt2)
 #t2t=t(table2)
 
 #prune tree to match table! nice code
@@ -59,7 +67,7 @@ plot(htre2)
 ```
 #so now I have htre2 and table2 both filtered to 826 species..running ABDOMEN
 ```{r}
- setwd("~/OneDrive - University of California, San Diego Health/TOL2024/phylo")
+setwd("~/OneDrive - University of California, San Diego Health/TOL2024/phylo")
 source("ABDOMEN.R")
 
 name <- "run_GMToL_phyla" # the name of the run
@@ -78,10 +86,19 @@ chains <-  4 # number of chains for the inference
 warmup <-  1000 # number of warmup iterations in STAN
 iter <-  2000 # total number of iterations in STAN
 
-fit_summary <- ABDOMEN(htre2, table2, name, 
+setwd("~/OneDrive - University of California, San Diego Health/TOL2024/phylo")
+
+setwd("/Users/samde/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")
+fit_summary <- ABDOMEN(htre2, rt2m, name, 
                        code_path = code_path,
                        detection_threshold = detection_threshold, seed = seed, 
                        mean_prior_logY = mean_prior_logY, sd_prior_logY = sd_prior_logY,
                        nb_cores = nb_cores, chains = chains, warmup = warmup, iter = iter)
+```
+
+```{r}
+setwd("/Users/samde/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")
+table <- t(read.table("table_bacterial_orders_Cetartiodactyla.txt", header=TRUE, sep="\t"))
+table
 ```
 

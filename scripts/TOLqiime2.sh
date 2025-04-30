@@ -769,7 +769,7 @@ for file in *.qza; do
     echo "Finishing deblur job"
 done
 
-srun --time=1:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
+srun --time=4:00:00 --partition=short --mem=12G -n 1 --pty bash -l 
 
 srun --time=4:00:00 --partition=rocky9_test --mem=64G -n 1 --pty bash -l 
 srun --time=12:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
@@ -780,7 +780,7 @@ conda activate qiime2-2023.7
 df -h
 conda activate /home/sdegregori/miniconda3/envs/qiime2-2023.7
 conda activate /home/sdegregori/miniconda3/envs/birdmanlucas
-
+conda activate /home/sdegregori/miniconda3/envs/q24.5
 
 
 qiime feature-table summarize \
