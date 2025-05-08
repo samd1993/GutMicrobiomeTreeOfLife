@@ -769,7 +769,7 @@ for file in *.qza; do
     echo "Finishing deblur job"
 done
 
-srun --time=4:00:00 --partition=short --mem=12G -n 1 --pty bash -l 
+srun --time=1:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
 
 srun --time=4:00:00 --partition=rocky9_test --mem=64G -n 1 --pty bash -l 
 srun --time=12:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
@@ -4408,3 +4408,130 @@ qiime diversity core-metrics-phylogenetic \
   --output-dir ~/TOL/V3-V4/core-metrics-phylo-results-GMTOLsong_tableN20_V3V4_400
 
 
+#making a snake bird bat table
+#first checking if GrpSpeciesMetadataFeb20_25_underscore.txt works with GrpSpecies V4 table
+#use these 2 files to summarize the table with qiime2
+
+qiime feature-table summarize \
+  --i-table ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_nospace.qza \
+  --m-sample-metadata-file ~/TOL/phylo/GrpSpeciesMetadataFeb21_25_nospace_filtered.txt \
+  --o-visualization ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_nospace.qzv
+
+
+#run core metrics on above table with GrpSpeciesMetadataFeb21_25_nospace_filtered_snake.txt
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ~/TOL/minich/GMTOLsong_rooted_tree2024f2.qza \
+  --i-table ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_nospace.qza \
+  --p-sampling-depth 400 \
+  --m-metadata-file ~/TOL/phylo/GrpSpeciesMetadataFeb21_25_nospace_filtered_snake.txt \
+  --output-dir ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_tableN20_V4_400
+
+#do beta significance on the unifrac distance matrix with respect to Class_w_snake column
+
+qiime diversity beta-group-significance \
+  --i-distance-matrix ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_tableN20_V4_400/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ~/TOL/phylo/GrpSpeciesMetadataFeb21_25_nospace_filtered_snake.txt \
+  --m-metadata-column Primer2 \
+  --o-visualization ~/TOL/phylo/beta-significance-GMTOLsong_V4_Primer2-unweighted_unifrac.qzv \
+  --p-pairwise
+
+  #doesnt work I have to do it with full table not grouped table GMTOLsong_table2024_N20_f2all_V4.qza and May1_25_GMTOLsong_metadata_all.txt
+#core metrics
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ~/TOL/minich/GMTOLsong_rooted_tree2024f2.qza \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4.qza \
+  --p-sampling-depth 400 \
+  --m-metadata-file ~/TOL/phylo/May1_25_GMTOLsong_metadata_all.txt \
+  --output-dir ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_table_allN20_V4_400
+
+ #doing beta significance on the unifrac distance matrix with respect to Class_w_snake column
+qiime diversity beta-group-significance \
+  --i-distance-matrix ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_table_allN20_V4_400/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ~/TOL/phylo/May1_25_GMTOLsong_metadata_all.txt \
+  --m-metadata-column Class_w_snakes \
+  --o-visualization ~/TOL/phylo/beta-significance-GMTOLsong_V4_Class_w_snake-unweighted_unifrac.qzv \
+  --p-pairwise 
+
+  #now do core metrics on the Vert table
+#first filter table to Vertebrates only
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4.qza \
+  --m-metadata-file ~/TOL/phylo/May1_25_GMTOLsong_metadata_all.txt \
+  --p-where "Chordata='Vertebrate'" \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertebrates.qza
+
+  #actually filter the table to only include Class equal to Amphibia, Reptilia, Aves, Mammalia, snakes, Actinopterygii, or Chiroptera
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4.qza \
+  --m-metadata-file ~/TOL/phylo/May1_25_GMTOLsong_metadata_all.txt \
+  --p-where "Class='Amphibia' OR Class='Reptilia' OR Class='Aves' OR Class='Mammalia' OR Class='Actinopterygii' OR Class='Chiroptera' OR Class='snakes'" \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertebratesf.qza
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ~/TOL/minich/GMTOLsong_rooted_tree2024f2.qza \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertebratesf.qza \
+  --p-sampling-depth 400 \
+  --m-metadata-file ~/TOL/phylo/May1_25_GMTOLsong_metadata_all.txt \
+  --output-dir ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_table_allN20_V4_400_Vertebratesf
+
+#doing beta significance on the unifrac distance matrix with respect to Class_w_snake column
+qiime diversity beta-group-significance \
+  --i-distance-matrix ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_table_allN20_V4_400_Vertebratesf/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ~/TOL/phylo/May1_25_GMTOLsong_metadata_all.txt \
+  --m-metadata-column Class_w_snakes \
+  --o-visualization ~/TOL/phylo/beta-significance-GMTOLsong_V4_Class_w_snake-unweighted_unifrac_Vertebratesf.qzv \
+  --p-pairwise
+
+#Make a rarefied table of ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertebratesf.qza to 1000
+qiime feature-table rarefy \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertebratesf.qza \
+  --p-sampling-depth 1000 \
+  --o-rarefied-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertebratesf_1k.qza
+
+#collapse table to species
+#plots are weird so trying unrarefied as well
+qiime taxa collapse \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertebratesf.qza \
+  --i-taxonomy ~/TOL/phylo/GMTOLsong_taxonomyN20all_2024f2.qza \
+  --p-level 7 \
+  --o-collapsed-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertebratesf_species7.qza
+
+  qiime feature-table group \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertebratesf_species7.qza \
+  --m-metadata-file ~/TOL/phylo/May1_25_GMTOLsong_metadata_all.txt \
+  --m-metadata-column Class_w_snakes \
+  --p-axis sample \
+  --p-mode median-ceiling \
+  --o-grouped-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertebratesf_species7_GrpClass_w_snakes.qza
+
+  #filter to reads above 100
+qiime feature-table filter-features \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertebratesf_species7_GrpClass_w_snakes.qza \
+  --p-min-frequency 10 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertebratesf_10_species7_GrpClass_w_snakes.qza
+
+
+
+
+
+  #filter above table to only have features with 300 reads
+  #ok didnt work now I am doing 10 and note that I already rarefied to 1k and then did 100_5 filtering but it seems like it reset or something after the grouping, so doing another filter step
+
+  #and then make a heatmap of table on Class_w_snakes heatmap without metadata
+  qiime feature-table heatmap \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertebratesf_10_species7_GrpClass_w_snakes.qza \
+  --p-color-scheme YlGnBu \
+  --o-visualization ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertebratesf_10_species7_GrpClass_w_snakes_heatmap.qzv
+
+
+  #now do at family level
+
+qiime taxa collapse \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertebratesf_1k.qza \
+  --i-taxonomy ~/TOL/phylo/GMTOLsong_taxonomyN20all_2024f2.qza \
+  --p-level 5 \
+  --o-collapsed-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertebratesf_family5.qza
