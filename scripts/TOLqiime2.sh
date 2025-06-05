@@ -4535,3 +4535,41 @@ qiime taxa collapse \
   --i-taxonomy ~/TOL/phylo/GMTOLsong_taxonomyN20all_2024f2.qza \
   --p-level 5 \
   --o-collapsed-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vertebratesf_family5.qza
+
+  #filter mitochondria and chloroplast and eukaryota from the GMTOLsong_tableNov2024_N20_f2all_grpSpecies_cancer_mam.qza 
+
+qiime taxa filter-table \
+  --i-table /ddn_scratch/sdegregori/cancer_mam/GMTOLsong_tableNov2024_N20_f2all_grpSpecies_cancer_mam.qza \
+  --i-taxonomy ~/TOL/minich/merged_GMTOL_taxonomy2024f2.qza \
+  --p-exclude mitochondria,chloroplast,eukaryota \
+  --o-filtered-table /ddn_scratch/sdegregori/cancer_mam/GMTOLsong_tableNov2024_N20_f2all_grpSpecies_cancer_mamf.qza
+
+  cp /ddn_scratch/sdegregori/cancer_mam/GMTOLsong_tableNov2024_N20_f2all_grpSpecies_cancer_mamf.qza /ddn_scratch/sdegregori/cancer_mam/GMTOL_cmr_table.qza
+
+#export it to biom
+
+qiime tools export \
+  --input-path /ddn_scratch/sdegregori/cancer_mam/GMTOL_cmr_table.qza \
+  --output-path /ddn_scratch/sdegregori/cancer_mam/GMTOL_cmr_table
+
+#and rename
+
+mv /ddn_scratch/sdegregori/cancer_mam/GMTOL_cmr_table/feature-table.biom /ddn_scratch/sdegregori/cancer_mam/GMTOL_cmr_table.biom
+
+cp ~/TOL/minich/merged_GMTOL_taxonomy2024f2.qza /ddn_scratch/sdegregori/cancer_mam/GMTOL_cmr_taxonomy.qza
+
+#export taxonomy file
+
+qiime tools export \
+  --input-path /ddn_scratch/sdegregori/cancer_mam/GMTOL_cmr_taxonomy.qza \
+  --output-path /ddn_scratch/sdegregori/cancer_mam/GMTOL_cmr_taxonomy
+
+#export tree
+
+qiime tools export \
+  --input-path ~/TOL/minich/GMTOLsong_rooted_tree2024f2.qza \
+  --output-path /ddn_scratch/sdegregori/cancer_mam/GMTOL_cmr_tree
+
+
+#run qiime2 tree job on rep_seqs_merged_filtered.qza in the cancer_qiita folder
+

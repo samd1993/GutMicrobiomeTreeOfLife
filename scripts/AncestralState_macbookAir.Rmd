@@ -1,0 +1,355 @@
+---
+title: "GMTOL ancestral state reconstruction"
+output: html_document
+date: "2025-04-17"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Ancestral State Reconstruction of GMToL data
+
+```{r}
+install.packages('funrar')
+install.packages(c("StanHeaders", "rstan"), repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+
+remove.packages('rstan')
+install.packages('rstan')
+
+library(ggplot2)
+library(mvMORPH)
+library(RPANDA)
+library(rstan)
+library(StanHeaders)
+rstan_options(auto_write = TRUE)
+
+library(RColorBrewer)
+library(phytools)
+
+library(funrar)
+library(ggimage)
+```
+
+#writing this code in mac mini: note working directories
+
+```{r}
+ setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")
+pgrp=as.data.frame(read.table("GrpTimeTree2_Phylum_GMTOL_unfilt.txt",sep='\t',header=TRUE))
+pgrp
+pgm=as.matrix(pgrp[,-1])
+rownames(pgm)=pgrp$sampleid
+pgm <- pgm[,names(sort(colSums(pgm), decreasing = TRUE))]
+pgm
+pg8=pgm[,1:8]
+pg8
+
+rownames(pg8) <- sub(" ", "_", rownames(pg8))
+head(pg8)
+
+setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")
+htre=read.tree("GMTOLallFeb20_no_ants.newick")
+plot(htre)
+
+length(htre$tip.label)
+
+nrow(pg8)
+
+head(htre$tip.label)
+
+htips=htre$tip.label
+irow=rownames(pg8)
+
+int=intersect(irow,htips)
+length(int)
+table2=pg8[int,]
+nrow(table2)
+#t2t=t(table2)
+
+#prune tree to match table! nice code
+
+htre2<-drop.tip(htre,htre$tip.label[-match(int, htre$tip.label)])
+length(htre2$tip.label)
+plot(htre2)
+htre2=force.ultrametric(htre2)
+ape::write.tree(htre2, file = "GMTOLallFebApr28_test.newick")
+
+table3=make_relative(table2)
+t3d=as.data.frame(table3)
+
+sapply(t3d, function(x) sum(is.na(x)))
+t4 <- t3d[complete.cases(t3d),]
+t4
+t4m=as.matrix(t4)
+
+irow=rownames(t4m)
+
+int=intersect(irow,htips)
+length(int)
+t5=t4m[int,]
+nrow(t5)
+
+htre2<-drop.tip(htre2,htre2$tip.label[-match(int, htre2$tip.label)])
+length(htre2$tip.label)
+```
+#so now I have htre2 and table2 both filtered to 826 species..running ABDOMEN
+```{r}
+ setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")
+source("ABDOMEN.R")
+
+name <- "run_GMToL_phyla_8" # the name of the run
+
+code_path <- getwd() # indicates where the stan codes are stored (here, there are directly stored in the working directory) and where the ABDOMEN plots will be generated.
+
+detection_threshold <- 1e-05 # the detection threshold: below this threshold, we assume that we cannot detect the microbial taxa (either because it is not present or because we cannot detect very rare taxa with metabarcoding techniques). Then, all relative abundances below this threshold are set to this threshold. 
+
+seed <- 4 # seed for reproductibility
+
+mean_prior_logY <- 0 # mean value for the Gaussian prior of logY (the latent variables that correspond to the total microbial abundances, relative to the ancestral ones)
+sd_prior_logY <- 2  # standard deviation for the Gaussian prior of logY (the latent variables that correspond to the total microbial abundances, relative to the ancestral ones)
+
+nb_cores <- 50 # number of cores to run the analyses
+chains <-  4 # number of chains for the inference
+warmup <-  10 # number of warmup iterations in STAN
+iter <-  20 # total number of iterations in STAN
+
+ setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/GitHub/GutMicrobiomeTreeOfLife/scripts")
+source("ABDOMEN.R")
+fit_summary <- ABDOMEN(htre2, t5, name, 
+                       code_path = code_path,
+                       detection_threshold = detection_threshold, seed = seed, 
+                       mean_prior_logY = mean_prior_logY, sd_prior_logY = sd_prior_logY,
+                       nb_cores = nb_cores, chains = chains, warmup = warmup, iter = iter)
+```
+```{r}
+# Specify the color for each microbial taxon:
+list_colors <- scales::hue_pal()(ncol(t5))
+names(list_colors) <- colnames(t5)
+
+
+# Generate the PDF plots:    
+ABDOMEN_process_output(htre2, t5, name, fit_summary, code_path = code_path, 
+		detection_threshold = detection_threshold, list_colors=list_colors)
+```
+
+```{r}
+# Pagel's lambda (the measure of phylosymbiosis):
+original_lambda <- ABDOMEN_extract_lambda(htr2, t5, fit_summary) # gives the mean estimated Pagel's lambda and its 95% CI
+original_lambda
+
+# The ancestral microbiota composition (Z0):
+ABDOMEN_extract_Z0(htre2, t5, fit_summary) 
+
+AEZ=ABDOMEN_extract_Z0(htre2,t5,fit_summary)
+```
+
+```{r}
+#trying code he wrote for extracting nodes
+
+AZN=ABDOMEN_extract_Z0_nodes(htre2, t5, fit_summary, detection_threshold=1e-05)
+```
+library(ggtree)
+```{r}
+ggtree(htre2, layout='circular')
+```
+
+```{r}
+treex="((bat:10, cow:10):10,(elk:10, fox:10):10);"
+treep=ape::read.tree(text=treex)
+treep
+plot(treep)
+```
+```{r}
+setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")
+nc=as.data.frame(read.table("abdomen_nodes.csv",sep=',',header=TRUE,row.names=1))
+nc
+nc8=nc[,1:8]
+
+ncc <- t(apply(nc8, 1, function(x) ifelse(x == max(x), 1, 0)))
+ncc
+ncc[200:250,]
+
+ncc1=ncc
+ncc1[,1]<-replace(ncc[,1], ncc[,1]==1, "red")
+ncc1
+
+ncc1[,2]<-replace(ncc[,2], ncc[,2]==1, "orange")
+ncc1[,3]<-replace(ncc[,3], ncc[,3]==1, "lightgreen")
+ncc1[,4]<-replace(ncc[,4], ncc[,4]==1, "lightblue")
+ncc1[,5]<-replace(ncc[,5], ncc[,5]==1, "tan")
+ncc1[,6]<-replace(ncc[,6], ncc[,6]==1, "violet")
+ncc1[,7]<-replace(ncc[,7], ncc[,7]==1, "maroon")
+ncc1[,8]<-replace(ncc[,8], ncc[,8]==1, "gold")
+ncc1
+
+```
+
+```{r}
+ncc2=ncc1
+lp <-matrix(apply(ncc2, 1, function(x) { x[x!="0"] }))
+lp
+lpd=as.data.frame(lp)
+colnames(lpd)="ncs"
+head(lpd)
+tail(lpd)
+lpd <- tibble::rownames_to_column(lpd, "nodes")
+
+
+
+td=ggtree::fortify(htre2)
+hist(td$node)
+tail(td)
+head(td)
+
+lpd$nodes=gsub("node_","",lpd$nodes)
+lpd
+td
+
+tree_data <- as_tibble(ggtree::fortify(htre2)) %>% left_join(lpd, by = c("nodes" = "node"))
+
+int=intersect(lpd$nodes,td$node)
+tdf=td[int,]
+tdf
+
+
+tdf$node %in% lpd$nodes
+tdf %>%
+  arrange(node)
+
+lpd %>%
+  arrange(nodes)
+tdf2=as.data.frame(tdf)
+lpt=as_tibble(lpd)
+lpt$nodes=as.integer(lpt$nodes)
+tree_data= left_join(tdf2,lpt, by = c("node" = "nodes"))
+tree_data
+
+
+
+
+
+ggtree(htre2) %<+% tree_data + 
+  geom_tree(aes(color = I(ncs))) 
+  #geom_label(aes(label=node)) +
+  #geom_tiplab() 
+
+```
+
+```{r}
+ setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")
+ogrp=as.data.frame(read.table("GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100_Order_rel.txt",sep='\t',header=TRUE, row.names=1))
+ogrp
+```
+```{r}
+otre=htre
+otips=otre$tip.label
+orow=rownames(o10t)
+
+oint=intersect(orow,otips)
+length(oint)
+otable=o10t[oint,]
+nrow(otable)
+#t2t=t(table2)
+
+#prune tree to match table! nice code
+library(ape)
+otre2<-drop.tip(otre,otre$tip.label[-match(int, otre$tip.label)])
+length(otre2$tip.label)
+plot(otre2)
+otre2=force.ultrametric(otre2)
+#ape::write.tree(otre2, file = "GMTOLallFeb17.newick")
+otabled=as.data.frame(otable)
+otable2=otable
+otd=as.data.frame(otable2)
+
+sapply(otd, function(x) sum(is.na(x)))
+otd2 <- otd[complete.cases(otd),]
+otd2
+ot4m=as.matrix(otd2)
+
+oirow=rownames(ot4m)
+
+oint=intersect(oirow,otips)
+length(oint)
+ot5=ot4m[oint,]
+nrow(ot5)
+
+otre2<-drop.tip(otre2,otre2$tip.label[-match(oint, otre2$tip.label)])
+length(otre2$tip.label)
+
+ape::write.tree(otre2, file = "GMTOLall_abdomen_809species.newick")
+write.csv(ot5,file='GMTOL_abdomen_table809.csv')
+```
+
+
+
+```{r}
+ setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")
+o10=read.csv("node_orders_GMTOL.csv",row.names=1)
+o10=o10[,1:10]
+odf <- t(apply(o10, 1, function(x) ifelse(x == max(x), 1, 0)))
+odf
+odf1=odf
+odf1[,1]<-replace(odf[,1], odf[,1]==1, "red")
+odf1
+
+odf1[,2]<-replace(odf[,2], odf[,2]==1, "orange")
+odf1[,3]<-replace(odf[,3], odf[,3]==1, "lightgreen")
+odf1[,4]<-replace(odf[,4], odf[,4]==1, "lightblue")
+odf1[,5]<-replace(odf[,5], odf[,5]==1, "tan")
+odf1[,6]<-replace(odf[,6], odf[,6]==1, "violet")
+odf1[,7]<-replace(odf[,7], odf[,7]==1, "maroon")
+odf1[,8]<-replace(odf[,8], odf[,8]==1, "gold")
+odf1[,9]<-replace(odf[,9], odf[,9]==1, "blue")
+odf1[,10]<-replace(odf[,10], odf[,10]==1, "lightpink")
+odf1
+
+odf2=odf1
+lpo <-matrix(apply(odf2, 1, function(x) { x[x!="0"] }))
+lpo
+rownames(lpo)=rownames(odf2)
+lpdo=as.data.frame(lpo)
+colnames(lpdo)="ncs"
+
+head(lpdo)
+tail(lpdo)
+lpdo <- tibble::rownames_to_column(lpdo, "nodes")
+
+ setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")
+otreef=ape::read.tree(file='GMTOLall_abdomen_809species_order.newick')
+tdo=ggtree::fortify(otreef)
+hist(tdo$node)
+tail(tdo)
+head(tdo)
+
+lpdo$nodes=gsub("node_","",lpdo$nodes)
+lpdo
+tdo
+
+into=intersect(lpdo$nodes,tdo$node)
+tdfo=tdo[into,]
+tdfo
+length(into)
+
+tdfo$node %in% lpdo$nodes
+tdfo %>%
+  arrange(node)
+
+lpdo %>%
+  arrange(nodes)
+tdf2o=as.data.frame(tdfo)
+lpto=as_tibble(lpdo)
+lpto$nodes=as.integer(lpto$nodes)
+tree_data_o= left_join(tdf2o,lpto, by = c("node" = "nodes"))
+tree_data_o
+
+
+
+
+
+ggtree(otre2) %<+% tree_data_o + 
+  geom_tree(aes(color = I(ncs))) +
+  #geom_label(aes(label=node)) +
+  geom_tiplab(color="grey")
+```
+

@@ -1,0 +1,165 @@
+1+1
+verion
+version
+library(ggplot2)library(mvMORPH)library(RPANDA)library(rstan)library(StanHeaders)rstan_options(auto_write = TRUE)library(RColorBrewer)library(phytools)library(funrar)
+setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")pgrp=as.data.frame(read.table("GrpTimeTree2_Phylum_GMTOL_unfilt.txt",sep='\t',header=TRUE))pgrppgm=as.matrix(pgrp[,-1])rownames(pgm)=pgrp$sampleidpgm <- pgm[,names(sort(colSums(pgm), decreasing = TRUE))]pgmpg8=pgm[,1:8]pg8rownames(pg8) <- sub(" ", "_", rownames(pg8))head(pg8)
+dim(pg8)
+setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")htre=read.tree("GMTOLallFeb20_no_ants.newick")plot(htre)length(htre$tip.label)nrow(pg8)head(htre$tip.label)htips=htre$tip.labelirow=rownames(pg8)int=intersect(irow,htips)length(int)table2=pg8[int,]nrow(table2)#t2t=t(table2)#prune tree to match table! nice codehtre2<-drop.tip(htre,htre$tip.label[-match(int, htre$tip.label)])length(htre2$tip.label)plot(htre2)htre2=force.ultrametric(htre2)#ape::write.tree(htre2, file = "GMTOLallFeb17.newick")table3=make_relative(table2)t3d=as.data.frame(table3)sapply(t3d, function(x) sum(is.na(x)))t4 <- t3d[complete.cases(t3d),]t4t4m=as.matrix(t4)irow=rownames(t4m)int=intersect(irow,htips)length(int)t5=t4m[int,]nrow(t5)htre2<-drop.tip(htre2,htre2$tip.label[-match(int, htre2$tip.label)])length(htre2$tip.label)
+name <- "run_GMToL_phyla_8" # the name of the runcode_path <- getwd() # indicates where the stan codes are stored (here, there are directly stored in the working directory) and where the ABDOMEN plots will be generated.detection_threshold <- 1e-05 # the detection threshold: below this threshold, we assume that we cannot detect the microbial taxa (either because it is not present or because we cannot detect very rare taxa with metabarcoding techniques). Then, all relative abundances below this threshold are set to this threshold. seed <- 4 # seed for reproductibilitymean_prior_logY <- 0 # mean value for the Gaussian prior of logY (the latent variables that correspond to the total microbial abundances, relative to the ancestral ones)sd_prior_logY <- 2  # standard deviation for the Gaussian prior of logY (the latent variables that correspond to the total microbial abundances, relative to the ancestral ones)nb_cores <- 50 # number of cores to run the analyseschains <-  4 # number of chains for the i
+nferencewarmup <-  10 # number of warmup iterations in STANiter <-  20 # total number of iterations in STAN setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/GitHub/GutMicrobiomeTreeOfLife/scripts")source("ABDOMEN.R")fit_summary <- ABDOMEN(htre2, t5, name,                        code_path = code_path,                       detection_threshold = detection_threshold, seed = seed,                        mean_prior_logY = mean_prior_logY, sd_prior_logY = sd_prior_logY,                       nb_cores = nb_cores, chains = chains, warmup = warmup, iter = iter)
+ABDOMEN_process_output(htre2, t5, name, fit_summary, code_path = code_path, 		detection_threshold = detection_threshold, list_colors=list_colors)
+list_colors <- scales::hue_pal()(ncol(t5))names(list_colors) <- colnames(t5)#
+# Generate the PDF plots:    ABDOMEN_process_output(htre2, t5, name, fit_summary, code_path = code_path, 		detection_threshold = detection_threshold, list_colors=list_colors)
+install.packages('ggimage')
+list_colors <- scales::hue_pal()(ncol(t5))names(list_colors) <- colnames(t5)#
+# Generate the PDF plots:    ABDOMEN_process_output(htre2, t5, name, fit_summary, code_path = code_path, 		detection_threshold = detection_threshold, list_colors=list_colors)
+?ABDOMEN
+df=data.frame(cbind(names(Z0),Z0))
+Z0_nodes
+AEZ=ABDOMEN_extract_Z0(htre2,t5,fit_summary)
+AEZ
+Z0_nodes
+AZP=ABDOMEN_process_output(htre2, t5, name, fit_summary, code_path = code_path, 		detection_threshold = detection_threshold, list_colors=list_colors)
+AZP
+class(AZP)
+type(AZP)
+datatype(AZP)
+is.datatype(AZP)
+str(AZP)
+AZP@data.frame
+ZO_nodes
+Z0_nodes
+data.frame_Z0_nodes
+data.frame
+data.frame(Z0_nodes)
+AZP$Z0_nodes
+AZP
+AZP
+ABDOMEN_extract_Z0_nodes <- function(tree, table, fit_summary, detection_threshold=1e-05){#
+  # scale the tree#
+  tree$edge.length <- tree$edge.length/max(node.depth.edgelength(tree)) #
+  # scale the abundance per row (each row sum must be equal to 1)#
+  for (i in 1:nrow(table)) {table[i,] <- table[i,]/sum(table[i,])}#
+  # reorder table as tree$tip.label#
+  table <- table[tree$tip.label,]#
+  while (length(table[which(table<detection_threshold)])>0){#
+    table[table<detection_threshold] <- detection_threshold#
+    for(i in 1:nrow(table)) {table[i,] <- table[i,]/sum(table[i,])}#
+  }#
+  p <- ncol(table)#
+  n <- nrow(table)#
+  Z0 <- fit_summary$summary[1:p,"mean"]#
+  names(Z0) <- colnames(table)#
+  lambda <- round(fit_summary$summary[nrow(fit_summary$summary)-1,1],2)#
+#
+  # Ancestral states at all nodes #
+  # Build a matrix with tip and internal covariances#
+  vcvPhyloInternal <- function(tree){#
+    nbtip <- Ntip(tree)#
+    dis <- dist.nodes(tree)#
+    MRCA <- mrca(tree, full = TRUE)#
+    M <- dis[as.character(nbtip + 1), MRCA]#
+    dim(M) <- rep(sqrt(length(M)), 2)#
+    return(M)#
+  }#
+  logX=log(table*exp(fit_summary$summary[(p+1):(p+n)]))#
+  logX <- logX[tree$tip.label,] # should not change anything#
+  # transform the tree#
+  tree_lambda <- tree#
+  tree_lambda$edge.length <- tree_lambda$edge.length*lambda#
+  tree_lambda$edge.length[which(tree_lambda$edge[,2] %in% 1:n)] <- tree_lambda$edge.length[which(tree_lambda$edge[,2] %in% 1:n)] + (1-lambda)#
+  tree_lambda$edge.length <- tree_lambda$edge.length/max(node.depth.edgelength(tree_lambda)) # useless#
+  # covariance for the nodes#
+  V <- vcvPhyloInternal(tree_lambda)#
+  indice <- (1:n)#
+  AY <- V[-indice,indice]#
+  vY <- V[indice,indice]#
+  # Ancestral state at the root#
+  one <- t(rbind(rep(1,n)))#
+  logZ0 <- log(Z0)#
+  # states at the nodes#
+  if (Nnode(tree)==n-1){ # the tree must be rooted and binary#
+    state_nodes <- (AY%*%pseudoinverse(vY)%*%(logX-one%*%logZ0))+(one[1:(n-1),,drop=F]%*%logZ0)#
+    colnames(state_nodes) = colnames(table)#
+    rownames(state_nodes) = paste("node_",n+1:Nnode(tree), sep="")#
+    Z0_nodes <- data.frame(exp(state_nodes))#
+    Z0_nodes$node <- n+1:Nnode(tree)#
+    Z0_nodes$MRCA <- NA#
+    for (i in 1:nrow(Z0_nodes)){#
+      Z0_nodes[i, 1:p] <- Z0_nodes[i, 1:p]/sum(Z0_nodes[i, 1:p])#
+      Z0_nodes$MRCA[i] <- paste(sort(extract.clade(tree, node=Z0_nodes$node[i])$tip.label),collapse = "-")#
+    }#
+    return(Z0_nodes)#
+#
+  } else {print("Warning: the tree must be rooted and binary.")}#
+}
+AZN=ABDOMEN_extract_Z0_nodes(htre2, t5, fit_summary, detection_threshold=1e-05)
+source('ABDOMEN2.R')
+AZN=ABDOMEN_extract_Z0_nodes(htre2, t5, fit_summary, detection_threshold=1e-05)
+library(ggplot2)library(mvMORPH)library(RPANDA)library(rstan)library(StanHeaders)
+rstan_options(auto_write = TRUE)library(RColorBrewer)library(phytools)library(funrar)library(ggimage)
+AZN=ABDOMEN_extract_Z0_nodes(htre2, t5, fit_summary, detection_threshold=1e-05)
+AZN
+type(AZN)
+class(AZN)
+View(AZN)
+write.csv(AZN, 'abdomen_nodes.csv')
+setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")source("ABDOMEN.R")otre2=read.tree("GMTOLall_abdomen_809species.newick")#
+o10=as.data.frame(read.table("GMTOL_abdomen_table809.csv",sep=',',header=TRUE))
+o10
+o10=as.data.frame(read.table("GMTOL_abdomen_table809.csv",sep=',',header=TRUE, row.names=1))
+head(o10)
+name <- "run_GMToL_phyla_8" # the name of the runcode_path <- getwd() # indicates where the stan codes are stored (here, there are directly stored in the working directory) and where the ABDOMEN plots will be generated.detection_threshold <- 1e-05 # the detection threshold: below this threshold, we assume that we cannot detect the microbial taxa (either because it is not present or because we cannot detect very rare taxa with metabarcoding techniques). Then, all relative abundances below this threshold are set to this threshold. seed <- 5 # seed for reproductibilitymean_prior_logY <- 0 # mean value for the Gaussian prior of logY (the latent variables that correspond to the total microbial abundances, relative to the ancestral ones)sd_prior_logY <- 2  # standard deviation for the Gaussian prior of logY (the latent variables that correspond to the total microbial abundances, relative to the ancestral ones)nb_cores <- 50 # number of cores to run the analyseschains <-  4 # number of chains for the inferencewarmup <-  10 # number of warmup iterations in STANiter <-  20 # total number of iterations in STAN
+fit_summary_o <- ABDOMEN(otre2, o10, name,                        code_path = code_path,                       detection_threshold = detection_threshold, seed = seed,                        mean_prior_logY = mean_prior_logY, sd_prior_logY = sd_prior_logY,                       nb_cores = nb_cores, chains = chains, warmup = warmup, iter = iter)
+o10=as.data.frame(read.table("GMTOL_abdomen_table809.csv",sep=',',header=TRUE, row.names=1))
+o10m=as.matrix(o10)
+head(o10m)
+fit_summary_o <- ABDOMEN(otre2, o10m, name,                        code_path = code_path,                       detection_threshold = detection_threshold, seed = seed,                        mean_prior_logY = mean_prior_logY, sd_prior_logY = sd_prior_logY,                       nb_cores = nb_cores, chains = chains, warmup = warmup, iter = iter)
+sapply(o10m, function(x) sum(is.na(x)))
+o10m2<- o10m[complete.cases(o10m),]
+head(o10m2)
+fit_summary_o <- ABDOMEN(otre2, o10m2, name,                        code_path = code_path,                       detection_threshold = detection_threshold, seed = seed,                        mean_prior_logY = mean_prior_logY, sd_prior_logY = sd_prior_logY,                       nb_cores = nb_cores, chains = chains, warmup = warmup, iter = iter)
+library(ggplot2)library(mvMORPH)library(RPANDA)library(rstan)library(StanHeaders)rstan_options(auto_write = TRUE)library(RColorBrewer)library(phytools)library(funrar)library(ggimage)
+length(o10m2)
+dim(o10m2)
+dim(otre2$tip.labels)
+nrow(otre2$tip.labels)
+plot(otre2)
+nrow(otre2$tip.label)
+length(otre2$tip.label)
+name <- "run_GMToL_order_10" # the name of the run
+setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/GitHub/GutMicrobiomeTreeOfLife/scripts")source("ABDOMEN.R")#
+fit_summary_o <- ABDOMEN(otre2, o10m2, name,                        code_path = code_path,                       detection_threshold = detection_threshold, seed = seed,                        mean_prior_logY = mean_prior_logY, sd_prior_logY = sd_prior_logY,                       nb_cores = nb_cores, chains = chains, warmup = warmup, iter = iter)
+otre2
+na_counts_base <- colSums(is.na(o10m))
+print(sum(na_counts_base))
+na_counts_base
+o10=as.data.frame(read.table("GMTOL_abdomen_table809.txt",sep='\t',header=TRUE, row.names=1))#
+o10m=as.matrix(o10)
+setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/TOL2024/phylo")source("ABDOMEN.R")otre2=read.tree("GMTOLall_abdomen_809species.newick")#
+o10=as.data.frame(read.table("GMTOL_abdomen_table809.txt",sep='\t',header=TRUE, row.names=1))#
+o10m=as.matrix(o10)
+head(o10m)
+na_counts_base <- colSums(is.na(o10m))
+sum(na_counts_base)
+nb_cores <- 10 # number of cores to run the analyses
+setwd("/Users/samd/Library/CloudStorage/OneDrive-UniversityofCalifornia,SanDiegoHealth/GitHub/GutMicrobiomeTreeOfLife/scripts")source("ABDOMEN.R")#
+fit_summary_o <- ABDOMEN(otre2, o10m2, name,                        code_path = code_path,                       detection_threshold = detection_threshold, seed = seed,                        mean_prior_logY = mean_prior_logY, sd_prior_logY = sd_prior_logY,                       nb_cores = nb_cores, chains = chains, warmup = warmup, iter = iter)
+typeof(o10m)
+typeof(o10m[,1])
+is.infinite(o10m)
+typeof(o10m[,2])
+typeof(o10m[,3])
+typeof(o10m[,4])
+typeof(o10m[,5])
+typeof(o10m[,6])
+typeof(o10m[,7])
+typeof(o10m[,8])
+typeof(o10m[,9])
+typeof(o10m[,10])
+typeof(o10m[,11])
+typeof(o10m[,0])
+detection_threshold <- 1e-04
+fit_summary_o <- ABDOMEN(otre2, o10m2, name,                        code_path = code_path,                       detection_threshold = detection_threshold, seed = seed,                        mean_prior_logY = mean_prior_logY, sd_prior_logY = sd_prior_logY,                       nb_cores = nb_cores, chains = chains, warmup = warmup, iter = iter)
+nb_cores <- 100
+fit_summary_o <- ABDOMEN(otre2, o10m2, name,                        code_path = code_path,                       detection_threshold = detection_threshold, seed = seed,                        mean_prior_logY = mean_prior_logY, sd_prior_logY = sd_prior_logY,                       nb_cores = nb_cores, chains = chains, warmup = warmup, iter = iter)
