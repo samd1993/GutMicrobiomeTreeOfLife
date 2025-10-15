@@ -769,18 +769,30 @@ for file in *.qza; do
     echo "Finishing deblur job"
 done
 
-srun --time=1:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
+srun --time=24:00:00 --partition=short --mem=64G -n 4 --pty bash -l 
+zsh
+conda activate /home/sdegregori/miniconda3/envs/qiime2-2023.7 
 
-srun --time=4:00:00 --partition=rocky9_test --mem=64G -n 1 --pty bash -l 
+srun --time=1:00:00 --partition=short --mem=8G --pty bash -l 
+zsh
+conda activate qiime2-amplicon-2024.10
+
+srun --time=12:00:00 --partition=short --mem=64G -n 4 --pty bash -l 
+zsh
+conda activate /home/sdegregori/miniconda3/envs/qiime2-2023.2
+
+srun --time=12:00:00 --partition=rocky9_test --mem=64G -n 1 --pty bash -l 
 srun --time=12:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
 srun --time=24:00:00 --partition=short --mem=64G -n 4 --pty bash -l 
 
 bash
 conda activate qiime2-2023.7
 df -h
-conda activate /home/sdegregori/miniconda3/envs/qiime2-2023.7
+conda activate /home/sdegregori/miniconda3/envs/qiime2-2023.7 
 conda activate /home/sdegregori/miniconda3/envs/birdmanlucas
 conda activate /home/sdegregori/miniconda3/envs/q24.5
+conda activate /home/sdegregori/miniconda3/envs/qiime2-2023.2
+conda activate /home/sdegregori/miniconda3/envs/qiime2-amplicon-2024.10
 
 
 qiime feature-table summarize \
@@ -1035,7 +1047,7 @@ qiime feature-table filter-samples \
   --i-table deblurFinal_merged_table.qza \
   --m-metadata-file samples2lose.txt \
   --p-exclude-ids \
-  --o-filtered-table deblurFinal_merged_table2.qza
+  --o-filtered-table deblurFinal_merged_table2.qza 
 
 qiime feature-table filter-samples \
   --i-table deblurFinal_merged_table.qza \
@@ -4570,6 +4582,1024 @@ qiime tools export \
   --input-path ~/TOL/minich/GMTOLsong_rooted_tree2024f2.qza \
   --output-path /ddn_scratch/sdegregori/cancer_mam/GMTOL_cmr_tree
 
+#now I want to make a new cmr table of all samples
+#in python compare metadata files cancer_mam_metadata2.txt and Jul11_25_GMTOLsong_metadata_all.txt to get all samples that are in sampleid of cancer_mam which also match the Species_copy column in the Jul11_25 file
+
+#then filter the Jul11_25_GMTOLsong_metadata_all.txt to only include those samples and save as cancer_mam_GMTOL_all_f.txt
+
+python
+import pandas as pd
+# Load the metadata files
+cancer_mam_metadata = pd.read_csv('cancer_mam_metadata2.txt', sep='\t') 
+gmtol_metadata = pd.read_csv('Jul11_25_GMTOLsong_metadata_all.txt', sep='\t')
+# Find common samples based on 'sampleid' in cancer_mam_metadata and 'Species_copy' in gmtol_metadata
+common_samples = cancer_mam_metadata['sampleid'][cancer_mam_metadata['sampleid'].isin(gmtol_metadata['Species_copy'])]
+#count how many
+print(f"Number of common samples: {len(common_samples)}")
+
+#now do this the other way around where I want all the rows of gmtol_metadata that match the sampleid of cancer_mam_metadata
+filtered_gmtol_metadata = gmtol_metadata[gmtol_metadata['Species_copy'].isin(cancer_mam_metadata['sampleid'])]
+#count how many
+print(f"Number of filtered GMTOL samples: {len(filtered_gmtol_metadata)}")
+# Save the filtered metadata to a new file
+filtered_gmtol_metadata.to_csv('cancer_mam_GMTOL_all_f.txt', sep='\t', index=False)
+#now from here subset only Primer equaling V4
+#first read in the new file
+filtered_gmtol_metadata = pd.read_csv('cancer_mam_GMTOL_all_f.txt', sep='\t')
+filtered_gmtol_metadata_v4 = filtered_gmtol_metadata[filtered_gmtol_metadata['Primer2'] == 'V4']
+#count how many
+print(f"Number of V4 samples: {len(filtered_gmtol_metadata_v4)}")
+# Save the V4 filtered metadata to a new file
+filtered_gmtol_metadata_v4.to_csv('cancer_mam_GMTOL_all_V4_f.txt', sep='\t', index=False)
+
+#now in bash with qiime I want to filter GMTOLsong_table2024_N20_f2all_f.qza to only include the samples in cancer_mam_GMTOL_all_V4_f.txt
+qiime feature-table filter-samples \
+  --i-table ~/TOL/minich/GMTOLsong_table2024_N20_f2all_f.qza \
+  --m-metadata-file cancer_mam_GMTOL_all_V4_f.txt \
+  --o-filtered-table ~/cancer_mam/GMTOLsong_table2024_N20_f2all_cancer_mam_V4.qza
+
+#and then filter the final GMTOL trees and taxonomy files to match this new table. So first filter tree
+qiime phylogeny filter-tree \
+  --i-tree ~/TOL/minich/GMTOLsong_rooted_tree2024f2.qza \
+  --i-table ~/cancer_mam/GMTOLsong_table2024_N20_f2all_cancer_mam_V4.qza \
+  --o-filtered-tree ~/cancer_mam/GMTOLsong_rooted_tree2024f2_cancer_mam_V4.qza
+
+#then filter taxonomy file
+qiime feature-classifier filter-taxonomy \
+  --i-taxonomy ~/TOL/minich/merged_GMTOL_taxonomy2024f2.qza \
+  --i-table ~/cancer_mam/GMTOLsong_table2024_N20_f2all_cancer_mam_V4.qza \
+  --o-filtered-taxonomy ~/cancer_mam/merged_GMTOL_taxonomy2024f2_cancer_mam_V4.qza
+
 
 #run qiime2 tree job on rep_seqs_merged_filtered.qza in the cancer_qiita folder
 
+#export ananya rep seqs qiime2 file
+qiime tools export \
+  --input-path /ddn_scratch/sdegregori/cancer_qiita/rep_seqs_merged_filtered.qza \
+  --output-path /ddn_scratch/sdegregori/cancer_qiita/rep_seqs_merged_filtered
+
+#merge phase1_human_rep-seqs.qza and GMTOLhumanNov2023_merged_seqs.qza
+
+qiime feature-table merge-seqs \
+  --i-data rep_seqs_merged_filtered.qza \
+  --i-data GMTOLhumanNov2023_merged_seqs1.qza \
+  --o-merged-data allphase_human_seqs_2025.qza
+
+# merge GMTOLhumanNov2023_merged_tables.qza and phase1_merged_tables.qza
+
+qiime feature-table merge \
+  --i-tables GMTOLhumanNov2023_merged_tables.qza \
+  --i-tables phase1_merged_tables.qza \
+  --o-merged-table allphase_human_tables_2025.qza
+
+  #filter seqs to match table
+qiime feature-table filter-seqs \
+  --i-data allphase_human_seqs_2025.qza \
+  --i-table allphase_human_tables_2025.qza \
+  --o-filtered-data allphase_human_seqs_2025f.qza
+
+#make a core metrics with merged_human_metadata_allphases.txt 
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny allphase_human_tree_2025.qza  \
+  --i-table allphase_human_tables_2025.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file merged_human_metadata_allphases.txt \
+  --output-dir core-metrics-phylo-results-allphase_human_tables_2025_1k
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+#collapse GMTOL table to speciel level
+
+qiime taxa collapse \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert.qza \
+  --i-taxonomy ~/TOL/phylo/GMTOLsong_taxonomyN20all_2024f2.qza \
+  --p-level 7 \
+  --o-collapsed-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_species7.qza
+
+#summarize the table
+
+qiime feature-table summarize \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_species7.qza \
+  --m-sample-metadata-file ~/TOL/phylo/May1_25_GMTOLsong_metadata_all.txt \
+  --o-visualization ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_species7.qzv
+
+#filter the table to only include species that show up in at least 2 samples and have at least 10 reads
+qiime feature-table filter-features \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_species7.qza \
+  --p-min-frequency 10 \
+  --p-min-samples 2 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_species7_10_2.qza
+
+  #summarize the filtered table
+qiime feature-table summarize \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_species7_10_2.qza \
+  --m-sample-metadata-file ~/TOL/phylo/May1_25_GMTOLsong_metadata_all.txt \
+  --o-visualization ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_species7_10_2.qzv
+
+#now try 100 reads across 2 samples
+qiime feature-table filter-features \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_species7.qza \
+  --p-min-frequency 100 \
+  --p-min-samples 2 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_species7_100_2.qza
+
+#and then remove samples with 200l reads or more
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_species7_100_2.qza \
+  --p-max-frequency 200000 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_species7_100_2_200k.qza
+
+#summarize
+qiime feature-table summarize \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_species7_100_2_200k.qza \
+  --m-sample-metadata-file ~/TOL/phylo/May1_25_GMTOLsong_metadata_all.txt \
+  --o-visualization ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_species7_100_2_200k.qzv
+
+
+#summarize GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.qza with GrpSpeciesMetadataFeb20_25_underscore.txt
+
+qiime feature-table summarize \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.qza \
+  --m-sample-metadata-file ~/TOL/phylo/GrpSpeciesMetadataFeb20_25_underscore.txt \
+  --o-visualization ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.qzv
+
+#and now collapse by species
+
+qiime taxa collapse \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.qza \
+  --i-taxonomy ~/TOL/phylo/GMTOLsong_taxonomyN20all_2024f2.qza \
+  --p-level 7 \
+  --o-collapsed-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7.qza
+
+#and now summarize
+qiime feature-table summarize \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7.qza \
+  --m-sample-metadata-file ~/TOL/phylo/GrpSpeciesMetadataFeb20_25_underscore.txt \
+  --o-visualization ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7.qzv
+
+#read in python with pandas as a dataframe May1_25_GMTOLsong_metadata_all.txt
+
+import pandas as pd
+import numpy as np
+#read in the metadata file
+df = pd.read_csv('~/TOL/phylo/GrpSpeciesMetadataFeb20_25_underscore.txt', sep='\t')
+
+#Can you make a new column for every level of the column 'Class' that is basically a yes no column depending on whether the row corresponds to that class or not?
+df2=df.copy()
+#print out all the Class levels
+df2['Class'].unique()
+
+#print how many rows there are for each level
+df2['Class'].value_counts()
+
+#now for all of these levels append a new yes no column for each level
+df2['Insecta'] = np.where(df2['Class'] == 'Insecta', 'yes', 'no')
+df2['Amphibia'] = np.where(df2['Class'] == 'Amphibia', 'yes', 'no')
+df2['Mammalia'] = np.where(df2['Class'] == 'Mammalia', 'yes', 'no')
+df2['Aves'] = np.where(df2['Class'] == 'Aves', 'yes', 'no')
+df2['Reptilia'] = np.where(df2['Class'] == 'Reptilia', 'yes', 'no')
+df2['Actinopterygii'] = np.where(df2['Class'] == 'Actinopterygii', 'yes', 'no')
+df2['Bivalvia'] = np.where(df2['Class'] == 'Bivalvia', 'yes', 'no')
+df2['Gastropoda'] = np.where(df2['Class'] == 'Gastropoda', 'yes', 'no')
+df2['Malacostraca'] = np.where(df2['Class'] == 'Malacostraca', 'yes', 'no')
+df2['Arachnida'] = np.where(df2['Class'] == 'Arachnida', 'yes', 'no')
+
+#write df2 as a tab delimited text file
+df2.to_csv('~/TOL/phylo/GrpSpeciesMetadataJun18_25_underscore_yesno.txt', sep='\t', index=False)
+
+
+#export table to biom
+qiime tools export \
+  --input-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7.qza \
+  --output-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7
+
+  #rename the biom file
+mv ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7/feature-table.biom ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7.biom
+
+#send biom to ddn_scratch/sdegregori/birdmantest
+
+cp ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7.biom /ddn_scratch/sdegregori/birdmantest/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7.biom
+
+#read in May1_25_GMTOLsong_metadata_all.txt with pandas as a dataframe and use python to get the average number of replicate samples per host species in the column 'Species'
+
+import pandas as pd
+#read in the metadata file
+df = pd.read_csv('May1_25_GMTOLsong_metadata_all.txt', sep='\t')
+#group by Species and get the number of samples in each group
+df_grouped = df.groupby('Species').size().reset_index(name='count')
+#calculate the average number of samples per species
+average_samples_per_species = df_grouped['count'].mean()
+print(f'Average number of samples per species: {average_samples_per_species}')
+#now get the median
+median_samples_per_species = df_grouped['count'].median()
+print(f'Median number of samples per species: {median_samples_per_species}')
+
+#summarize GMTOLsong_seqs2024_ALL.qza with qiime2 in ~/TOL/minich
+
+qiime feature-table summarize \
+  --i-table ~/TOL/minich/GMTOLsong_table2024f.qza \
+  --m-sample-metadata-file ~/TOL/phylo/May1_25_GMTOLsong_metadata_all.txt \
+  --o-visualization ~/TOL/minich/GMTOLsong_table2024f_redo.qzv
+
+#get rid of singletons and at least 2 samples
+qiime feature-table filter-features \
+  --i-table ~/TOL/minich/GMTOLsong_table2024f.qza \
+  --p-min-frequency 2 \
+  --p-min-samples 2 \
+  --o-filtered-table ~/TOL/minich/GMTOLsong_table2024f_2_2.qza
+
+#get rid of eukaryota, mitochondria, and chloroplast
+qiime taxa filter-table \
+  --i-table ~/TOL/minich/GMTOLsong_table2024f_2_2.qza \
+  --i-taxonomy ~/TOL/minich/merged_GMTOL_taxonomy2024f2.qza \
+  --p-exclude eukaryota,mitochondria,chloroplast \
+  --o-filtered-table ~/TOL/minich/GMTOLsong_table2024f_2_2f.qza
+
+#summarize the filtered table
+qiime feature-table summarize \
+  --i-table ~/TOL/minich/GMTOLsong_table2024f_2_2f.qza \
+  --m-sample-metadata-file ~/TOL/phylo/May1_25_GMTOLsong_metadata_all.txt \
+  --o-visualization ~/TOL/minich/GMTOLsong_table2024f_2_2f.qzv
+
+
+#now I want to use GrpSpeciesMetadataJun18_25_underscore_yesno.txt and GMTOLsong_table2024_N20_f2all_V4_GrpSpecies_f.qza which is in minich folder
+
+qiime feature-table summarize \
+  --i-table ~/TOL/minich/GMTOLsong_table2024_N20_f2all_V4_GrpSpecies_f.qza \
+  --m-sample-metadata-file ~/TOL/phylo/GrpSpeciesMetadataJun18_25_underscore_yesno.txt \
+  --o-visualization ~/TOL/minich/GMTOLsong_table2024_N20_f2all_V4_GrpSpecies_f.qzv
+
+#above doesnt work!!!! 
+#now try with GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2.qza
+
+qiime feature-table summarize \
+  --i-table ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2.qza \
+  --m-sample-metadata-file ~/TOL/phylo/GrpSpeciesMetadataJun18_25_underscore_yesno.txt \
+  --o-visualization ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2.qzv
+
+#doesnt work now trying renaming. export GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf.qza in qiime2
+
+qiime tools export \
+  --input-path ~/TOL/minich/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf.qza \
+  --output-path ~/TOL/minich/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf
+
+#convert above to tsv
+
+biom convert \
+  --input-fp ~/TOL/minich/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf/feature-table.biom \
+  --output-fp ~/TOL/minich/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf.tsv \
+  --to-tsv
+#have to add underscores
+  #import GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_underscore.txt to qiime2
+#conver GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_underscore.txt to biom
+
+biom convert \
+  --input-fp ~/TOL/minich/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_underscore.txt \
+  --output-fp ~/TOL/minich/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_underscore.txt.biom \
+  --to-hdf5
+
+qiime tools import \
+  --input-path ~/TOL/minich/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_underscore.txt.biom \
+  --type 'FeatureTable[Frequency]' \
+  --output-path ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_underscore.qza
+
+#filter table to match metadata
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_underscore.qza \
+  --m-metadata-file ~/TOL/phylo/GrpSpeciesMetadataJun18_25_underscore_yesno.txt \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_underscore.qza
+
+
+#make a qzv file 
+
+qiime feature-table summarize \
+  --i-table ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_underscore.qza \
+  --m-sample-metadata-file ~/TOL/phylo/GrpSpeciesMetadataJun18_25_underscore_yesno.txt \
+  --o-visualization ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_underscore.qzv
+
+#now filter for Primer2 equal to V4 and DietSimp equal to 'Carnivore' or 'Omnivore' or 'Herbivore' 
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_underscore.qza \
+  --m-metadata-file ~/TOL/phylo/GrpSpeciesMetadataJun18_25_underscore_yesno.txt \
+  --p-where "Primer2='V4' AND (DietSimp='Carnivore' OR DietSimp='Omnivore' OR DietSimp='Herbivore')" \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_underscore_V4CHO.qza
+
+#and then do an code metrics on above table at 600 reads
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ~/TOL/minich/GMTOLsong_rooted_tree2024f2.qza \
+  --i-table ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_underscore_V4CHO.qza \
+  --p-sampling-depth 600 \
+  --m-metadata-file ~/TOL/phylo/GrpSpeciesMetadataJun18_25_underscore_yesno.txt \
+  --output-dir ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_tableN20_GrpSpecies_V4CHO_600
+
+#filter final/GMTOLsong_table2024_N20_f2all_f.qza to only include V4 samples and DietSimp equal to 'Carnivore' or 'Omnivore' or 'Herbivore'
+qiime feature-table filter-samples \
+  --i-table ~/TOL/final/GMTOLsong_table2024_N20_f2all_f.qza \
+  --m-metadata-file ~/TOL/final/Jul10_25_GMTOLsong_metadata_all.txt \
+  --p-where "Primer2='V4' AND (DietSimp='Carnivore' OR DietSimp='Omnivore' OR DietSimp='Herbivore')" \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4CHO.qza
+
+#do core metrics on the filtered table at 600 reads
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ~/TOL/final/GMTOLsong_rooted_tree2024f2.qza \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4CHO.qza \
+  --p-sampling-depth 600 \
+  --m-metadata-file ~/TOL/final/Jul10_25_GMTOLsong_metadata_all.txt \
+  --output-dir ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_tableN20_V4CHO_600
+
+#now do adonis on the GMTOLsong table using formula Phylum + Class + Order + Family + DietSimp + Chordata
+
+qiime diversity adonis \
+  --i-distance-matrix ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_tableN20_V4CHO_600/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ~/TOL/final/Jul10_25_GMTOLsong_metadata_all.txt \
+  --p-formula "Phylum + Class + Order + Family + DietSimp + Chordata" \
+  --o-visualization ~/TOL/phylo/adonis-GMTOLsong_V4CHO-uw.qzv
+
+#then merge table by Chordata 
+qiime feature-table group \
+  --i-table ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_underscore_V4CHO.qza \
+  --m-metadata-file ~/TOL/phylo/GrpSpeciesMetadataJun18_25_underscore_yesno.txt \
+  --m-metadata-column Chordata \
+  --p-axis sample \
+  --p-mode median-ceiling \
+  --o-grouped-table ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_underscore_V4CHO_Chordata.qza
+
+#and then do a taxa bar plot without metadata
+qiime taxa barplot \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2_V4_VertInvert.qza \
+  --i-taxonomy ~/TOL/phylo/GMTOLsong_taxonomyN20all_2024f2.qza \
+  --o-visualization ~/TOL/phylo/taxaonomy_GMTOLsong_table2024_N20_f2all_VertInvert_barplot.qzv
+
+CONDA_SUBDIR=osx-64 conda env create -n qiime2-2024.10 --file https://data.qiime2.org/distro/amplicon/qiime2-amplicon-2024.10-py310-osx-conda.yml
+conda activate qiime2-2024.10
+conda config --env --set subdir osx-64
+
+#filter ~/TOL/final/GMTOLsong_table2024_N20_f2all_f.qza to only include Vertebrates and Invertebrates and Primer2 V4
+qiime feature-table filter-samples \
+  --i-table ~/TOL/final/GMTOLsong_table2024_N20_f2all_f.qza \
+  --m-metadata-file ~/TOL/final/Jul11_25_GMTOLsong_metadata_all.txt \
+  --p-where "Primer2='V4' AND (Chordata='Vertebrate' OR Chordata='Invertebrate')" \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2_V4_VertInvert.qza
+
+
+#then run core metrics on above table at 600
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ~/TOL/final/GMTOLsong_rooted_tree2024f2.qza \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2_V4_VertInvert.qza \
+  --p-sampling-depth 600 \
+  --m-metadata-file ~/TOL/final/Jul11_25_GMTOLsong_metadata_all.txt \
+  --output-dir ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_tableN20_V4_VertInvert_600
+
+#and then run beta significance on the unifrac distance matrix with respect to Chordata
+qiime diversity beta-group-significance \
+  --i-distance-matrix ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_tableN20_V4_VertInvert_600/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ~/TOL/final/Jul11_25_GMTOLsong_metadata_all.txt \
+  --m-metadata-column Chordata \
+  --o-visualization ~/TOL/phylo/beta-significance-GMTOLsong_VertInvert_Chordata-unweighted_unifrac.qzv \
+  --p-pairwise
+
+  #summarize GMTOLsong_table2024_N20_f2all_VertInvert.qza
+
+qiime feature-table summarize \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2_V4_VertInvert.qza \
+  --m-sample-metadata-file ~/TOL/final/Jul11_25_GMTOLsong_metadata_all.txt \
+  --o-visualization ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_VertInvert.qzv
+
+  #group ~/TOL/phylo/GMTOLsong_table2024_N20_f2_V4_VertInvert.qza by Chordata
+
+
+
+  #make a taxa barplot
+#not working. Trying sum
+
+qiime feature-table group \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2_V4_VertInvert.qza \
+  --m-metadata-file ~/TOL/final/Jul10_25_GMTOLsong_metadata_all.txt \
+  --m-metadata-column Chordata \
+  --p-axis sample \
+  --p-mode sum \
+  --o-grouped-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_GrpVertInvert_sum.qza
+
+#and then make a taxa bar plot without metadata
+qiime taxa barplot \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_GrpVertInvert_sum.qza \
+  --i-taxonomy ~/TOL/phylo/GMTOLsong_taxonomyN20all_2024f2.qza \
+  --o-visualization ~/TOL/phylo/taxaonomy_GMTOLsong_table2024_N20_f2all_GrpVertInvert_barplot.qzv
+
+  #run a separate adonis for each factor that I listed before for CHO
+
+qiime diversity adonis \
+  --i-distance-matrix ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_tableN20_V4CHO_600/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ~/TOL/final/Jul10_25_GMTOLsong_metadata_all.txt \
+  --p-formula "Phylum \
+  --p-n-jobs 4 \
+  --o-visualization ~/TOL/phylo/adonis-GMTOLsong_VertInvert-uw-Phylum.qzv
+
+qiime diversity adonis \
+  --i-distance-matrix ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_tableN20_V4CHO_600/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ~/TOL/final/Jul10_25_GMTOLsong_metadata_all.txt \
+  --p-formula "Class" \
+  --p-n-jobs 4 \
+  --o-visualization ~/TOL/phylo/adonis-GMTOLsong_VertInvert-uw-Class.qzv
+
+qiime diversity adonis \
+  --i-distance-matrix ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_tableN20_V4CHO_600/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ~/TOL/final/Jul10_25_GMTOLsong_metadata_all.txt \
+  --p-formula "Order" \
+  --p-n-jobs 4 \
+  --o-visualization ~/TOL/phylo/adonis-GMTOLsong_VertInvert-uw-Order.qzv
+
+qiime diversity adonis \
+  --i-distance-matrix ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_tableN20_V4CHO_600/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ~/TOL/final/Jul10_25_GMTOLsong_metadata_all.txt \
+  --p-formula "Family" \
+  --p-n-jobs 4 \
+  --o-visualization ~/TOL/phylo/adonis-GMTOLsong_VertInvert-uw-Family.qzv
+
+qiime diversity adonis \
+  --i-distance-matrix ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_tableN20_V4CHO_600/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ~/TOL/final/Jul10_25_GMTOLsong_metadata_all.txt \
+  --p-formula "DietSimp" \
+  --p-n-jobs 4 \
+  --o-visualization ~/TOL/phylo/adonis-GMTOLsong_VertInvert-uw-DietSimp.qzv
+
+qiime diversity adonis \
+  --i-distance-matrix ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_tableN20_V4_VertInvert_600/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ~/TOL/final/Jul10_25_GMTOLsong_metadata_all.txt \
+  --p-formula "Chordata" \
+  --p-n-jobs 4 \
+  --o-visualization ~/TOL/phylo/adonis-GMTOLsong_VertInvert-uw-Chordata.qzv
+
+ qiime diversity adonis \
+  --i-distance-matrix ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_tableN20_V4_VertInvert_600/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ~/TOL/final/Jul10_25_GMTOLsong_metadata_all.txt \
+  --p-formula "Genus" \
+  --p-n-jobs 4 \
+  --o-visualization ~/TOL/phylo/adonis-GMTOLsong_VertInvert-uw-Genus.qzv 
+
+  qiime diversity adonis \
+  --i-distance-matrix ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_tableN20_V4_VertInvert_600/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ~/TOL/final/Jul10_25_GMTOLsong_metadata_all.txt \
+  --p-formula "Species" \
+  --p-n-jobs 4 \
+  --o-visualization ~/TOL/phylo/adonis-GMTOLsong_VertInvert-uw-Species.qzv
+
+#now do adonis on Study + Species
+qiime diversity adonis \
+  --i-distance-matrix ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_tableN20_V4_VertInvert_600/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ~/TOL/final/Jul10_25_GMTOLsong_metadata_all.txt \
+  --p-formula "Study + Species" \
+  --p-n-jobs 4 \
+  --o-visualization ~/TOL/phylo/adonis-GMTOLsong_VertInvert-uw-StudySpecies.qzv
+
+  #now do beta sig test on Class_snake_env_Invert on core-metrics-phylo-results-GMTOLsong_table_allN20_V4_400 folder
+qiime diversity beta-group-significance \
+  --i-distance-matrix ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_table_allN20_V4_400/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ~/TOL/final/Jul11_25_GMTOLsong_metadata_all.txt \
+  --m-metadata-column Class_snake_env_Invert \
+  --o-visualization ~/TOL/phylo/beta-significance-core-metrics-allN20_V4_400_Class_snake_env_Invert-uw.qzv \
+  --p-pairwise
+
+  #now do this on Class_snake_env_InvertVert
+
+qiime diversity beta-group-significance \
+  --i-distance-matrix ~/TOL/phylo/core-metrics-phylo-results-GMTOLsong_table_allN20_V4_400/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ~/TOL/final/Jul11_25_GMTOLsong_metadata_all.txt \
+  --m-metadata-column Class_snake_env_InvertVert \
+  --o-visualization ~/TOL/phylo/beta-significance-core-metrics-allN20_V4_400_Class_snake_env_InvertVert-uw.qzv \
+  --p-pairwise
+
+  #now do it on the unifrac from the core-metrics-phylo-results-GMTOLsong_tableN20_V4_1k folder
+
+qiime diversity beta-group-significance \
+  --i-distance-matrix ~/TOL/minich/core-metrics-phylo-results-GMTOLsong_tableN20_V4_1k/unweighted_unifrac_distance_matrix.qza \
+  --m-metadata-file ~/TOL/final/Jul11_25_GMTOLsong_metadata_all.txt \
+  --m-metadata-column Class_snake_env_InvertVert \
+  --o-visualization ~/TOL/phylo/beta-significance-core-metrics-N20_V4_1k_Class_snake_env_Invert-uw.qzv \
+  --p-pairwise
+
+  #and then make a phylum table off the main V4 GMTOL table
+
+qiime taxa collapse \
+
+
+
+#making collapsed table for Lucas
+
+qiime taxa collapse \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.qza \
+  --i-taxonomy ~/TOL/phylo/MTOLsong_taxonomyN20all_2024f2_lucas-2.qza \
+  --p-level 7 \
+  --o-collapsed-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7.qza
+
+#then cp to /ddn_scratch/sdegregori/birdmantest
+
+cp ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7.qza /ddn_scratch/sdegregori/birdmantest/MTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7v2.qza
+
+export /ddn_scratch/sdegregori/birdmantest/MTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7v2.qza to biom file
+
+qiime tools export \
+  --input-path /ddn_scratch/sdegregori/birdmantest/MTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7v2.qza \
+  --output-path /ddn_scratch/sdegregori/birdmantest/MTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7v2
+
+#rename the biom file
+
+mv /ddn_scratch/sdegregori/birdmantest/MTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7v2/feature-table.biom /ddn_scratch/sdegregori/birdmantest/MTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7v2.biom
+
+#cp ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.qza to /ddn_scratch/sdegregori/birdmantest/MTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.qza
+
+cp ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.qza /ddn_scratch/sdegregori/birdmantest/MTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.qza
+
+#export the table to biom format
+qiime tools export \
+  --input-path /ddn_scratch/sdegregori/birdmantest/MTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.qza \
+  --output-path /ddn_scratch/sdegregori/birdmantest/MTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2
+
+#rename /ddn_scratch/sdegregori/birdmantest/MTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.qza to /ddn_scratch/sdegregori/birdmantest/GTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.qza
+
+mv /ddn_scratch/sdegregori/birdmantest/MTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2/feature-table.biom /ddn_scratch/sdegregori/birdmantest/GTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.biom
+
+mv /ddn_scratch/sdegregori/birdmantest/MTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2 /ddn_scratch/sdegregori/birdmantest/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2
+
+mv /ddn_scratch/sdegregori/birdmantest/GTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.biom /ddn_scratch/sdegregori/birdmantest/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2.biom
+
+#write dada2 command to trim a single end fastq study at 150bp using placeholder simple names for tutorial like seqs.qza
+
+qiime dada2 denoise-single \
+  --i-demultiplexed-seqs seqs.qza \
+  --p-trim-left 0 \
+  --p-trunc-len 150 \
+  --o-table table.qza \
+  --o-representative-sequences rep-seqs.qza \
+  --o-denoising-stats stats.qza
+
+mkdir birdman
+
+#in python read combined_birdman_results.tsv and select first column and then any column with header 'T.no]_mean' in it and make new df
+
+import pandas as pd
+#read in the combined_birdman_results.tsv file
+df = pd.read_csv('combined_birdman_results.tsv', sep='\t')
+#select first column of df and then subsequent column headers that contains string '_mean_' in header name
+ = df[['Feature'] + [col for col in df.columns if '_mean' in col]]
+
+
+
+#read in combined_birdman_results.tsv in python
+
+import pandas as pd
+#read in the combined_birdman_results.tsv file
+df = pd.read_csv('combined_birdman_results.tsv', sep='\t')
+
+#now make a df with only columns with ']_mean_' in the header name
+
+mean_cols = [col for col in df.columns if ']_mean_' in col]
+#make a new df with only the first column and the mean columns
+df_mean = df[['Feature'] + mean_cols]
+
+#now replace anything that comes before ']_mean_' with nothing, including the ]_mean_ part in the column names
+
+df_mean.columns = [col.split(']')[1] if ']_mean_' in col else col for col in df_mean.columns]
+
+df_mean.head()
+
+#now write the df_mean to a tsv file ignoring the index
+
+df_mean.to_csv('birdman_mean_resultsf.tsv', sep='\t', index=False)
+
+#now make an community empress plot without taxonomy that uses the birdman_mean_resultsf.tsv file as the feature metadata file
+
+qiime empress community-plot \
+  --i-feature-table ../../Dumpy/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7.qza \
+  --i-tree birdman_phylogeny.qza \
+  --m-sample-metadata-file ../../Dumpy/GrpSpeciesMetadataJun18_25_underscore_yesno.txt \
+  --m-feature-metadata-file birdman_mean_resultsf.tsv \
+  --o-visualization GMTOLsong_empress_plot_birdman_mean.qzv
+
+
+#export the tree
+
+qiime tools export \
+  --input-path birdman_phylogeny.qza \
+  --output-path birdman_phylogeny
+
+  #summarize table
+qiime feature-table summarize \
+  --i-table ../../Dumpy/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7.qza \
+  --m-sample-metadata-file ../../Dumpy/GrpSpeciesMetadataJun18_25_underscore_yesno.txt \
+  --o-visualization GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7.qzv
+
+
+qiime empress community-plot \
+  --i-feature-table ../../Dumpy/birdman_feature_table-2.qza \
+  --i-tree birdman_phylogeny.qza \
+  --m-sample-metadata-file ../../Dumpy/GrpSpeciesMetadataJun18_25_underscore_yesno.txt \
+  --m-feature-metadata-file birdman_mean_resultsf.tsv \
+  --o-visualization GMTOLsong_empress_plot_birdman_mean.qzv
+
+  #export birdman_taxonomy.qza to tsv
+qiime tools export \
+  --input-path ../../Dumpy/birdman_taxonomy.qza \
+  --output-path ../../Dumpy/birdman_taxonomy
+
+~~~~~~~~~~~~~~
+
+import pandas as pd
+#read in the combined_birdman_results.tsv file
+df = pd.read_csv('combined_birdman_results-fixed.tsv', sep='\t')
+
+#now make a df with only columns with ']_mean_' in the header name
+
+mean_cols = [col for col in df.columns if ']_mean_' in col]
+#make a new df with only the first column and the mean columns
+df_mean = df[['Feature'] + mean_cols]
+
+#now replace anything that comes before ']_mean_' with nothing, including the ]_mean_ part in the column names
+
+df_mean.columns = [col.split(']')[1] if ']_mean_' in col else col for col in df_mean.columns]
+
+df_mean.head()
+
+#now write the df_mean to a tsv file ignoring the index
+
+df_mean.to_csv('birdman_mean_resultsf-fixed.tsv', sep='\t', index=False)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+qiime empress community-plot \
+  --i-feature-table ../../Dumpy/GMTOLsong_table2024_N20_f2all_V4_Vert_filt_100_200k_100_2_Grpspecies2_species7.qza \
+  --i-tree birdman_phylogeny.qza \
+  --m-sample-metadata-file ../../Dumpy/GrpSpeciesMetadataJun18_25_underscore_yesno.txt \
+  --m-feature-metadata-file birdman_mean_resultsf-fixed.tsv \
+  --o-visualization GMTOLsong_empress_plot_birdman_mean.qzv
+
+  ~~~~~~~~~~~~~~~~~~~~
+  #in python check for duplicate Features in Feature column and print them out from dataframe as rows
+
+import pandas as pd
+#read in the combined_birdman_results.tsv file ignoring indexes
+
+df = pd.read_csv('combined_birdman_results-fixed.tsv', sep='\t')
+df
+
+#check for duplicate Features in Feature column
+duplicates = df[df.duplicated(['Feature'], keep=False)]
+#now print out the duplicates
+print(duplicates)
+#write to tsv file
+duplicates.to_csv('birdman_duplicates.tsv', sep='\t', index=False)
+#now make revert to old df but keep the 1st duplicate of each pair
+
+df_unique = df.drop_duplicates(subset=['Feature'], keep='first')
+#write the unique df to a tsv file
+df_unique.to_csv('birdman_unique_results.tsv', sep='\t', index=False)
+
+mean_cols = [col for col in df_unique.columns if ']_mean_' in col]
+#make a new df with only the first column and the mean columns
+df_mean = df_unique[['Feature'] + mean_cols]
+
+#now replace anything that comes before ']_mean_' with nothing, including the ]_mean_ part in the column names
+
+df_mean.columns = [col.split(']')[1] if ']_mean_' in col else col for col in df_mean.columns]
+
+df_mean.head()
+
+#now write the df_mean to a tsv file ignoring the index
+
+df_mean.to_csv('birdman_mean_resultsf-unique.tsv', sep='\t', index=False)
+
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#now make community empress plot with the unique results
+
+qiime empress community-plot \
+  --i-feature-table birdman_feature_table-2.qza \
+  --i-tree birdman_phylogeny_maybe2.qza \
+  --m-sample-metadata-file ../../Dumpy/GrpSpeciesMetadataJun18_25_underscore_yesno.txt \
+  --m-feature-metadata-file birdman_mean_resultsf-unique.tsv \
+  --o-visualization GMTOLsong_empress_plot_birdman_mean.qzv
+
+  #now use python to check how many
+
+
+
+#doing luis prelim fig for k99. Filter merged-table.qza  with metadata.txt so primer is equal to V4 and 'age' equals Adult and Children and assume everything is in this directory: /ddn_scratch/lxxu/gmtol/dadaqiimeseq/studies3/pcoa
+
+qiime feature-table filter-samples \
+  --i-table merged-table.qza \
+  --m-metadata-file metadata.txt \
+  --p-where "Primer='V4' AND (age='Adult' OR age='Children')" \
+  --o-filtered-table V4_AdultChildren_table.qza
+
+#now run core metrics on the filtered table at 2000 reads
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny qiimeseq-rooted_treef.qza \
+  --i-table V4_AdultChildren_table.qza \
+  --p-sampling-depth 2000 \
+  --m-metadata-file metadata.txt \
+  --output-dir core-metrics-results-V4_AdultChildren_2000
+
+#copy /ddn_scratch/lxxu/gmtol/dadaqiimeseq/studies3/pcoa/core-metrics-results-V4_AdultChildren_2000 to core-metrics-results-V4_AdultChildren_2000
+
+cp -r /ddn_scratch/lxxu/gmtol/dadaqiimeseq/studies3/pcoa/core-metrics-results-V4_AdultChildren_2000 .
+#do a qiime cache refresh
+qiime cache refresh
+
+#trying gg2 
+ qiime greengenes2 non-v4-16s \
+    --i-table merged-table.qza \
+    --i-sequences merged-rep-seqs.qza \
+    --p-threads 4 \
+    --i-backbone ~/TOL/2022.10.backbone.full-length.fna.qza \
+    --o-mapped-table merged_table_gg2.qza \
+    --o-representatives merged_seqs_gg2.qza
+
+#make a qzv out of the merged_rep_seqs_gg2.qza file using tabulate seqs
+qiime metadata tabulate \
+  --m-input-file merged_seqs_gg2.qza \
+  --o-visualization merged_seqs_gg2.qzv
+
+#now run core metrics at 2000 reads on the merged_table_gg2.qza file with 2022.10.phylogeny.id.nwk 4 threads
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny 2022.10.phylogeny.id.nwk.qza \
+  --i-table merged_table_gg2_f.qza \
+  --p-sampling-depth 2000 \
+  --m-metadata-file Luis_metadata.txt \
+  --p-n-jobs-or-threads auto \
+  --output-dir core-metrics-results-_all_2000_gg2
+
+  #filter table to match metadata
+qiime feature-table filter-samples \
+  --i-table merged_table_gg2.qza \
+  --m-metadata-file Luis_metadata.txt \
+  --o-filtered-table merged_table_gg2_f.qza
+
+#cp the new table, sequences, and tree I used to /ddn_scratch/lxxu/gmtol/dadaqiimeseq/studies3/pcoa/gg2
+
+cp merged_table_gg2_f.qza /ddn_scratch/lxxu/gmtol/dadaqiimeseq/studies3/pcoa/gg2/
+cp merged_seqs_gg2.qza /ddn_scratch/lxxu/gmtol/dadaqiimeseq/studies3/pcoa/gg2/
+cp 2022.10.phylogeny.id.nwk.qza /ddn_scratch/lxxu/gmtol/dadaqiimeseq/studies3/pcoa/gg2/
+
+https://ftp.microbio.me/greengenes_release/2022.10/2022.10.taxonomy.id.tsv.qza
+
+
+#for metadata.txt in python I want to find out the sample size of each Disease stratified by age
+python
+import pandas as pd
+#read in the metadata.txt file
+df = pd.read_csv('Luis_metadata.txt', sep='\t')
+#group by Disease and age and count the number of samples in each group
+df_grouped = df.groupby(['disease', 'age']).size().reset_index(name='sample_size')
+#now print the df_grouped
+print(df_grouped)
+
+#make a metadata file with disease = 'Obesity, Diabetes' and '± Obesity/T2D' and then 130 random samples from 'Healthy' but make sure all of this are V3-V4 samples
+
+df_filtered = df[(df['disease'].isin(['Obesity, Diabetes', '± Obesity/T2D'])) | (df['disease'] == 'Healthy') & (df['primer'] == 'V3-V4')]
+#now randomly sample 130 samples from the Healthy group
+df_healthy = df_filtered[df_filtered['disease'] == 'Healthy'].sample(n=130, random_state=42)
+#now concatenate the two dataframes
+df_final = pd.concat([df_filtered[df_filtered['disease'].isin(['Obesity, Diabetes', '± Obesity/T2D'])], df_healthy])
+df_final.shape
+#list out primers by disease
+df_final.groupby('disease')['primer'].unique()
+#write the df_final to a tsv file
+df_final.to_csv('Luis_metadata_t2d.txt', sep='\t', index=False)
+
+#now filter the merged_table_gg2_f.qza file to only include the samples in df_final
+qiime feature-table filter-samples \
+  --i-table merged_table_gg2_f.qza \
+  --m-metadata-file Luis_metadata_t2d.txt \
+  --o-filtered-table merged_table_gg2_f_t2d.qza
+
+# for Luis_metadata_t2d.txt I want to group 'Obesity, Diabetes', '± Obesity/T2D' into a new group called ObesityT2D in a new column called diseaseAncom
+
+python
+import pandas as pd
+#read in the Luis_metadata_t2d.txt file
+df = pd.read_csv('Luis_metadata_t2d.txt', sep='\t')
+#replace 'Obesity, Diabetes', '± Obesity/T2D' with 'ObesityT2D' in the disease column
+df['diseaseAncom'] = df['disease'].replace({'Obesity, Diabetes': 'ObesityT2D', '± Obesity/T2D': 'ObesityT2D'})
+print(df['diseaseAncom'].unique())
+#write the df to a tsv file
+df.to_csv('Luis_metadata_t2d_ancom.txt', sep='\t', index=False)
+
+#now run ancom on the merged_table_gg2_f_t2d.qza file with the Luis_metadata_t2d_ancom.txt file on the diseaseAncom column
+#start with insitial steps of ancom
+qiime composition add-pseudocount \
+  --i-table merged_table_gg2_f_t2d.qza \
+  --o-composition-table merged_table_gg2_f_t2d_pseudocount.qza
+
+#apparently dont need to do above. Instead first collapse the table to spcies using the gg2 taoxnomy file and the t2d table
+qiime taxa collapse \
+  --i-table merged_table_gg2_f_t2d.qza \
+  --i-taxonomy 2022.10.taxonomy.id.tsv.qza \
+  --p-level 7 \
+  --o-collapsed-table merged_table_gg2_f_t2d_species.qza
+
+#then run ancombc
+qiime composition ancombc \
+  --i-table merged_table_gg2_f_t2d_species.qza \
+  --m-metadata-file Luis_metadata_t2d_ancom.txt \
+  --p-formula "diseaseAncom" \
+  --o-differentials ancombc-Luis_metadata_t2d_ancom.qza
+
+#now make a visualization of the ancombc results
+
+qiime composition da-barplot \
+  --i-data ancombc-Luis_metadata_t2d_ancom.qza \
+  --p-significance-threshold 0.001 \
+  --p-level-delimiter ";s__" \
+  --o-visualization ancombc-Luis_metadata_t2d_ancom_species.qzv
+
+qiime composition ancombc \
+  --i-table merged_table_gg2_f_t2d_species.qza \
+  --m-metadata-file Luis_metadata_t2d_ancom.txt \
+  --p-formula "age + diseaseAncom" \
+  --o-differentials ancombc-Luis_metadata_t2dAge_ancom.qza
+
+#now make a visualization of the ancombc results
+qiime composition da-barplot \
+  --i-data ancombc-Luis_metadata_t2dAge_ancom.qza \
+  --p-significance-threshold 0.001 \
+  --p-level-delimiter ";s__" \
+  --o-visualization ancombc-Luis_metadata_t2dAge_ancomS.qzv
+
+#now do age* diseaseAncom
+
+qiime composition ancombc \
+  --i-table merged_table_gg2_f_t2d_species.qza \
+  --m-metadata-file Luis_metadata_t2d_ancom.txt \
+  --p-formula "age * diseaseAncom" \
+  --o-differentials ancombc-Luis_metadata_t2dxAge_ancom.qza
+
+#now make a visualization of the ancombc results
+qiime composition da-barplot \
+  --i-data ancombc-Luis_metadata_t2dxAge_ancom.qza \
+  --p-significance-threshold 0.01 \
+  --o-visualization ancombc-Luis_metadata_t2dxAge_ancom01.qzv
+
+#ok now add a new column to Luis_metadata_t2d_ancom.txt where age and diseaseAncom are combined into a new column called ageDiseaseAncom where the values are 'Adult_ObesityT2D', 'Children_ObesityT2D', 'Adult_Healthy', 'Children_Healthy'
+
+python
+import pandas as pd
+#read in the Luis_metadata_t2d_ancom.txt file
+df = pd.read_csv('Luis_metadata_t2d_ancom.txt', sep='\t')
+#add a new column called ageDiseaseAncom where the values are 'Adult_ObesityT2D', 'Children_ObesityT2D', 'Adult_Healthy', 'Children_Healthy'
+df['ageDiseaseAncom'] = df.apply(lambda x: f"{x['age']}_{x['diseaseAncom']}", axis=1)
+df['ageDiseaseAncom'].unique()
+#write the df to a tsv file
+df.to_csv('Luis_metadata_t2d_ancom_ageDisease.txt', sep='\t', index=False)
+exit()
+
+#now run ancombc on the merged_table_gg2_f_t2d_species.qza file with the Luis_metadata_t2d_ancom_ageDisease.txt file on the ageDiseaseAncom column  (adding a 2 here so for original without reference level set look for non 2)
+
+qiime composition ancombc \
+  --i-table merged_table_gg2_f_t2d_species.qza \
+  --m-metadata-file Luis_metadata_t2d_ancom_ageDisease.txt \
+  --p-formula "ageDiseaseAncom" \
+  --p-reference-levels "ageDiseaseAncom::Adult_Healthy" \
+  --o-differentials ancombc-Luis_metadata_t2dAgeDisease_ancom2.qza
+
+#now make a visualization of the ancombc results
+qiime composition da-barplot \
+  --i-data ancombc-Luis_metadata_t2dAgeDisease_ancom.qza \
+  --p-significance-threshold 0.01 \
+  --o-visualization ancombc-Luis_metadata_t2dAgeDisease_ancom01.qzv
+
+
+#filter Luis_metadata_t2d_ancom.txt to just Adult
+python
+import pandas as pd
+#read in the Luis_metadata_t2d_ancom.txt file
+df = pd.read_csv('Luis_metadata_t2d_ancom.txt', sep='\t')
+#filter the df to just Adult
+df_adult = df[df['age'] == 'Adult']
+#write the df_adult to a tsv file
+df_adult.to_csv('Luis_metadata_t2d_ancom_adult.txt', sep='\t', index=False)
+
+
+
+#now filter the merged_table_gg2_f_t2d_species.qza file to just Adult samples
+qiime feature-table filter-samples \
+  --i-table merged_table_gg2_f_t2d_species.qza \
+  --m-metadata-file Luis_metadata_t2d_ancom.txt \
+  --p-where "age='Adult'" \
+  --o-filtered-table merged_table_gg2_f_t2d_species_adult.qza
+
+#now run ancombc on the merged_table_gg2_f_t2d_species_adult.qza file with the Luis_metadata_t2d_ancom_adult.txt file on the diseaseAncom column
+qiime composition ancombc \
+  --i-table merged_table_gg2_f_t2d_species_adult.qza \
+  --m-metadata-file Luis_metadata_t2d_ancom_adult.txt \
+  --p-formula "diseaseAncom" \
+  --o-differentials ancombc-Luis_metadata_t2d_adult_ancom_test.qza \
+  --verbose
+
+#now make a visualization of the ancombc results
+qiime composition da-barplot \
+  --i-data ancombc-Luis_metadata_t2d_adult_ancomOT2D.qza \
+  --p-significance-threshold 0.01 \
+  --o-visualization ancombc-Luis_metadata_t2d_adult_ancomOT2D01.qzv
+
+  #show unique values in the diseaseAncom column in Luis_metadata_t2d_ancom_adult.txt
+
+  python
+import pandas as pd
+#read in the Luis_metadata_t2d_ancom_adult.txt file
+df = pd.read_csv('Luis_metadata_t2d_ancom_adult.txt', sep='\t')
+#show unique values in the diseaseAncom column
+print(df['diseaseAncom'].unique())
+
+#show number of values in the diseaseAncom column
+print(df['diseaseAncom'].value_counts())
+
+#filter GMTOLsong_table2024_N20_f2all_V4.qza to have no samples with 0 reads
+
+qiime feature-table filter-samples \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4.qza \
+  --p-min-frequency 1 \
+  --o-filtered-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_filt.qza
+
+  #then export the table to biom format
+qiime tools export \
+  --input-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_filt.qza \
+  --output-path ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_filt
+
+#then rename the biom file to GMTOLsong_table2024_N20_f2all_V4_filt.biom
+mv ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_filt/feature-table.biom ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_filt.biom
+#then copy the biom file to /ddn_scratch/sdegregori/birdmantest/GMTOLsong_table2024_N20_f2all_V4_filt.biom
+cp ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_V4_filt.biom /ddn_scratch/sdegregori/birdmantest/GMTOLsong_table2024_N20_f2all_V4_filt.biom
+#then convert to tsv
+biom convert \
+  --input-fp /ddn_scratch/sdegregori/birdmantest/GMTOLsong_table2024_N20_f2all_V4_filt.biom \
+  --output-fp /ddn_scratch/sdegregori/birdmantest/GMTOLsong_table2024_N20_f2all_V4_filt.tsv \
+  --to-tsv 
+
+#summarize GMTOLsolo_tableN5.qza
+qiime feature-table summarize \
+  --i-table GMTOLsolo_tableN5.qza \
+  --o-visualization GMTOLsolo_tableN5.qzv
+
+#import 55205_NZdata_Templeton_S0_L001_I1_001.fastq.gz  55205_NZdata_Templeton_S0_L001_R2_001.fastq.gz
+55205_NZdata_Templeton_S0_L001_R1_001.fastq.gz files using qiime2 EMP protocol 
+ qiime tools import \
+  --type EMPPairedEndSequences \
+  --input-path jianshu \
+  --output-path jianshuGMTOL_NZ_1500.qza
+
+
+#prune the tree 
+/home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.asv.nwk.qza with this feature metadata feature_metadata.tsv
+
+qiime phylogeny filter-tree \
+  --i-tree /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.asv.nwk.qza \
+  --m-metadata-file feature_metadata.tsv \
+  --o-filtered-tree pruned_tree_2024.09_asv.qza
+
+#export the tree
+qiime tools export \
+  --input-path pruned_tree_2024.09_asv.qza \
+  --output-path pruned_tree_2024.09_asv
+
+  #example code for Igor
+#prune this tree: /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.asv.nwk.qza
+  
+  from skbio import TreeNode
+  import pandas as pd
+
+#load the tree
+tree = TreeNode.read('/home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.asv.nwk')
+#load the feature metadata file
+
+df = pd.read_csv('feature_metadata.tsv', sep='\t')
+#make a list of the features to keep
+features_to_keep = set(df['feature-id'])
+#prune the tree
+pruned_tree = tree.prune(features_to_keep)
+
+cd /projects/cancer_qiita/data/biom_tables/all_studies_current_gg2.2024.9.fna.qza
+
+
+
+#use full_metadata.txt and merged_table_gg2.qza to make a table with only samples with age6 not equal to 'NaN'
+
+qiime feature-table filter-samples \
+  --i-table merged_table_gg2.qza \
+  --m-metadata-file full_metadata.txt \
+  --p-where "age6 IS NOT 'NaN'" \
+  --o-filtered-table merged_table_gg2_age6.qza
+
+  #and then use the gg2 tree and run core metrics at 1000 sampling depth but use correct path for tree it is somewhere else
+wget https://ftp.microbio.me/greengenes_release/2022.10/2022.10.phylogeny.id.nwk.qza
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny 2022.10.phylogeny.id.nwk.qza \
+  --i-table merged_table_gg2_age6.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file full_metadata.txt \
+  --p-n-jobs-or-threads auto \
+  --output-dir core-metrics-results-gg2_age6_1k   
