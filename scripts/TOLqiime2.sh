@@ -773,7 +773,7 @@ srun --time=24:00:00 --partition=short --mem=64G -n 4 --pty bash -l
 zsh
 conda activate /home/sdegregori/miniconda3/envs/qiime2-2023.7 
 
-srun --time=1:00:00 --partition=short --mem=8G --pty bash -l 
+srun --time=8:00:00 --partition=short --mem=64G -n 4 --pty bash -l 
 zsh
 conda activate qiime2-amplicon-2024.10
 
@@ -5603,3 +5603,17 @@ qiime diversity core-metrics-phylogenetic \
   --m-metadata-file full_metadata.txt \
   --p-n-jobs-or-threads auto \
   --output-dir core-metrics-results-gg2_age6_1k   
+
+  ~~~~~~~~~~~~~~~~~~~~
+  #I want to do gg2 on GMTOLsong_table2024_N20_f2all_f.qza but in the ~TOL/final folder
+
+#installing qiime2 greengenes2 plugin if not already installed on qiime2-2024.5
+
+  qiime greengenes2 non-v4-16s \
+    --i-table ~/TOL/final/GMTOLsong_table2024_N20_f2all_f.qza \
+    --i-sequences ~/TOL/final/GMTOLsong_seqs2024_N20all_f2.qza \
+    --p-threads 4 \
+    --i-backbone /home/mcdonadt/greengenes2/release/2024.09/2024.09.backbone.full-length.fna.qza \
+    --o-mapped-table ~/TOL/final/GMTOLsong_table2024_N20_f2all_gg2_f.qza \
+    --o-representatives ~/TOL/final/GMTOLsong_rep_seqs2024_N20_f2all_gg2_f.qza
+ 
