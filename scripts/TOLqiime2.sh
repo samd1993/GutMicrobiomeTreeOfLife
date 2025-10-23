@@ -769,7 +769,7 @@ for file in *.qza; do
     echo "Finishing deblur job"
 done
 
-srun --time=1:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
+srun --time=3:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
 
 srun --time=4:00:00 --partition=rocky9_test --mem=64G -n 1 --pty bash -l 
 srun --time=12:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
@@ -778,6 +778,7 @@ srun --time=24:00:00 --partition=short --mem=64G -n 4 --pty bash -l
 bash
 conda activate qiime2-2023.7
 df -h
+bash
 conda activate /home/sdegregori/miniconda3/envs/qiime2-2023.7
 conda activate /home/sdegregori/miniconda3/envs/birdmanlucas
 
@@ -4431,3 +4432,54 @@ qiime tools export \
   -i ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100_Order_rel/feature-table.biom \
   -o ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100_Order_rel.tsv \
   --to-tsv
+
+~~~~~~~~~~~
+#run alpha rarefaction on GMTOLsong_table2024_N20_f2all_cancer_mam_V4.qza with Jul11_25_GMTOLsong_metadata_all.txt all in the cancer_mam fol
+
+#run alpha rarefaction
+qiime diversity alpha-rarefaction \
+--i-table GMTOLsong_table2024_N20_f2all_cancer_mam_V4.qza \
+--i-phylogeny GMTOLsong_rooted_tree2024f2_cancer_mam_V4.qza \
+--p-max-depth 10000 \
+--m-metadata-file Jul11_25_GMTOLsong_metadata_all.txt \
+--o-visualization GMTOLsong_cancer_mam_alpha_rarefaction_10k
+
+#now rarefy the table to 1k and to 10k
+  qiime feature-table rarefy \
+  --i-table GMTOLsong_table2024_N20_f2all_cancer_mam_V4.qza \
+  --p-sampling-depth 1000 \
+  --o-rarefied-table GMTOLsong_table2024_N20_f2all_cancer_mam_V4_1k.qza
+
+    qiime feature-table rarefy \
+  --i-table GMTOLsong_table2024_N20_f2all_cancer_mam_V4.qza \
+  --p-sampling-depth 10000 \
+  --o-rarefied-table GMTOLsong_table2024_N20_f2all_cancer_mam_V4_10k.qza
+
+  #then do core metrics on 1 and 10k tables
+
+  qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny GMTOLsong_rooted_tree2024f2_cancer_mam_V4.qza \
+  --i-table GMTOLsong_table2024_N20_f2all_cancer_mam_V4_1k.qza \
+  --p-sampling-depth 1000 \
+  --m-metadata-file Jul11_25_GMTOLsong_metadata_all.txt \
+  --output-dir core-metrics-phylo-results-GMTOLsong_tableN20_cancer_mam_V4_1k
+
+  #do faith pd significance on 1k table on just samples
+  qiime diversity alpha-group-significance \
+  --i-alpha-diversity core-metrics-phylo-results-GMTOLsong_tableN20_cancer_mam_V4_1k/faith_pd_vector.qza \
+  --m-metadata-file Jul11_25_GMTOLsong_metadata_all.txt \
+  --o-visualization faith-pd-significance-GMTOLsong_tableN20_cancer_mam_V4_1k.qzv
+
+  #now do same with 10k table
+  qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny GMTOLsong_rooted_tree2024f2_cancer_mam_V4.qza \
+  --i-table GMTOLsong_table2024_N20_f2all_cancer_mam_V4_10k.qza \
+  --p-sampling-depth 10000 \
+  --m-metadata-file Jul11_25_GMTOLsong_metadata_all.txt \
+  --output-dir core-metrics-phylo-results-GMTOLsong_tableN20_cancer_mam_V4_10k
+
+  #do faith pd significance on 10k table on just samples
+  qiime diversity alpha-group-significance \
+  --i-alpha-diversity core-metrics-phylo-results-GMTOLsong_tableN20_cancer_mam_V4_10k/faith_pd_vector.qza \
+  --m-metadata-file Jul11_25_GMTOLsong_metadata_all.txt \
+  --o-visualization faith-pd-significance-GMTOLsong_tableN20_cancer_mam_V4_10k.qzv
