@@ -769,15 +769,11 @@ for file in *.qza; do
     echo "Finishing deblur job"
 done
 
-<<<<<<< HEAD
-srun --time=24:00:00 --partition=short --mem=64G -n 4 --pty bash -l 
+srun --time=1:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
 zsh
 conda activate /home/sdegregori/miniconda3/envs/qiime2-2023.7 
-=======
-srun --time=3:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
->>>>>>> e86ca956f1300886bc1ce9ad7d210008aea47c1a
 
-srun --time=8:00:00 --partition=short --mem=64G -n 4 --pty bash -l 
+srun --time=1:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
 zsh
 conda activate qiime2-amplicon-2024.10
 
@@ -4430,7 +4426,6 @@ qiime diversity core-metrics-phylogenetic \
 
 #collapsing GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100.qza to Order level with GMTOL taxonomy f2all. Note that for phyla I used a taxa bar output and I THINK its from the same source just maybe unfiltered.
 
-<<<<<<< HEAD
 #making a snake bird bat table
 #first checking if GrpSpeciesMetadataFeb20_25_underscore.txt works with GrpSpecies V4 table
 #use these 2 files to summarize the table with qiime2
@@ -5628,29 +5623,22 @@ qiime diversity core-metrics-phylogenetic \
     --o-mapped-table ~/TOL/final/GMTOLsong_table2024_N20_f2all_gg2_f.qza \
     --o-representatives ~/TOL/final/GMTOLsong_rep_seqs2024_N20_f2all_gg2_f.qza
  
-=======
-qiime taxa collapse \
-  --i-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100.qza \
-  --i-taxonomy GMTOLsong_taxonomyN20all_2024f2.qza \
-  --p-level 4 \
-  --o-collapsed-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100_Order.qza
+#ok now I want to run core metrics on the GMTOLsong_table2024_N20_f2all_gg2_f.qza file at 600 reads using the gg2 tree and metadata and output things into gg2 folder
 
-  #convert to relative abund
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.id.nwk.qza \
+  --i-table ~/TOL/final/GMTOLsong_table2024_N20_f2all_gg2_f.qza \
+  --p-sampling-depth 600 \
+  --m-metadata-file ~/TOL/final/Jul11_25_GMTOLsong_metadata_all.txt \
+  --p-n-jobs-or-threads auto \
+  --output-dir ~/TOL/gg2/core-metrics-results-GMTOLsong_table2024_N20_f2all_gg2_f_600
 
-qiime feature-table relative-frequency \
-  --i-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100_Order.qza \
-  --o-relative-frequency-table GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100_Order_rel.qza 
 
-#export the table to biom and tsv
+#I want to filter a Class grouped table to keep features iin only 50% of samples so a fraction
+#first I want to group a GrpSpecies table by Class
 
-qiime tools export \
-  --input-path GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100_Order_rel.qza \
-  --output-path ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100_Order_rel
 
-  biom convert \
-  -i ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100_Order_rel/feature-table.biom \
-  -o ~/TOL/phylo/GMTOLsong_tableNov2024_N20_f2all_grpSpeciesf_renamed_timetree2_filt100_Order_rel.tsv \
-  --to-tsv
+
 
 ~~~~~~~~~~~
 #run alpha rarefaction on GMTOLsong_table2024_N20_f2all_cancer_mam_V4.qza with Jul11_25_GMTOLsong_metadata_all.txt all in the cancer_mam fol
@@ -5702,4 +5690,255 @@ qiime diversity alpha-rarefaction \
   --i-alpha-diversity core-metrics-phylo-results-GMTOLsong_tableN20_cancer_mam_V4_10k/faith_pd_vector.qza \
   --m-metadata-file Jul11_25_GMTOLsong_metadata_all.txt \
   --o-visualization faith-pd-significance-GMTOLsong_tableN20_cancer_mam_V4_10k.qzv
->>>>>>> e86ca956f1300886bc1ce9ad7d210008aea47c1a
+
+  #collapse GMTOLsong_table2024_N20_f2all_gg2_f.qza to Species level and output to gg2 folder. Make sure to use mcdonalt gg2 taxonomy file
+
+qiime taxa collapse \
+  --i-table ~/TOL/final/GMTOLsong_table2024_N20_f2all_gg2_f.qza \
+  --i-taxonomy /home/mcdonadt/greengenes2/release/2024.09/2024.09.taxonomy.id.tsv.qza \
+  --p-level 7 \
+  --o-collapsed-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_Species.qza
+
+  #and then group that based on Class from Jul11_25_GMTOLsong_metadata_all.txt
+
+qiime feature-table group \
+--i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_Species.qza \
+--p-axis sample \
+--m-metadata-file ~/TOL/final/Jul11_25_GMTOLsong_metadata_all.txt \
+--m-metadata-column 'Class' \
+--p-mode sum \
+--o-grouped-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_Species_GrpClass.qza
+
+#filtering above table to only keep features in at least 5 samples
+qiime feature-table filter-features \
+  --i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_Species_GrpClass.qza \
+  --p-min-samples 5 \
+  --o-filtered-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_Species_GrpClass_filt0.5.qza
+
+  #then summarize the filtered table
+qiime feature-table summarize \
+  --i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_Species_GrpClass_filt0.5.qza \
+  --o-visualization ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_Species_GrpClass_filt0.5.qzv
+
+  #ok now do this on the GMTOLsong_table2024_N20_f2all_gg2_f.qza table directly grouped by Class
+qiime feature-table group \
+--i-table ~/TOL/final/GMTOLsong_table2024_N20_f2all_gg2_f.qza \
+--p-axis sample \
+--m-metadata-file ~/TOL/final/Jul11_25_GMTOLsong_metadata_all.txt \
+--m-metadata-column 'Class' \
+--p-mode sum \
+--o-grouped-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass.qza
+
+#filtering above table to only keep features in at least 5 samples
+qiime feature-table filter-features \
+  --i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass.qza \
+  --p-min-samples 5 \
+  --o-filtered-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass_filt5.qza
+
+  #then summarize the filtered table
+qiime feature-table summarize \
+  --i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass_filt5.qza \
+  --o-visualization ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass_filt5.qzv
+
+pip install empress
+qiime dev refresh-cache
+
+#now do an empress plot using gg2 tree and taxonomy from macdonadt and use macdonadt taxonomy too
+qiime empress community-plot \
+--i-tree /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.id.nwk.qza \
+--m-feature-metadata-file /home/mcdonadt/greengenes2/release/2024.09/2024.09.taxonomy.id.tsv.qza \
+--m-sample-metadata-file ~/TOL/gg2/GrpClass_metadata.txt \
+--i-feature-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass_filt5.qza \
+--o-visualization ~/TOL/gg2/GMTOLsong_gg2_empress_GrpClass_filt5.qzv
+
+#now lets try filtering features that are in at least 10 samples
+qiime feature-table filter-features \
+  --i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass.qza \
+  --p-min-samples 10 \
+  --o-filtered-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass_filt10.qza
+
+  #then empress
+qiime empress community-plot \
+--i-tree /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.id.nwk.qza \
+--m-feature-metadata-file /home/mcdonadt/greengenes2/release/2024.09/2024.09.taxonomy.id.tsv.qza \
+--m-sample-metadata-file ~/TOL/gg2/GrpClass_metadata.txt \
+--i-feature-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass_filt10.qza \
+--o-visualization ~/TOL/gg2/GMTOLsong_gg2_empress_GrpClass_filt10.qzv
+
+#now try rarefying the class table to 10k
+qiime feature-table rarefy \
+  --i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass.qza \
+  --p-sampling-depth 10000 \
+  --o-rarefied-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass_10k.qza
+
+#now filter the filt10 table so that ClassEnv does not equal Environment
+qiime feature-table filter-samples \
+  --i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass_filt10.qza \
+  --m-metadata-file ~/TOL/gg2/GrpClass_metadata.txt \
+  --p-exclude-ids \
+  --p-where "ClassEnv='Environment'" \
+  --o-filtered-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass_filt10_noEnv.qza
+
+  #then make a summary
+qiime feature-table summarize \
+  --i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass_filt10_noEnv.qza \
+  --o-visualization ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass_filt10_noEnv.qzv
+
+  #now make empress plot
+qiime empress community-plot \
+--i-tree /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.id.nwk.qza \
+--m-feature-metadata-file /home/mcdonadt/greengenes2/release/2024.09/2024.09.taxonomy.id.tsv.qza \
+--m-feature-metadata-file ~/TOL/gg2/feautre_metadata_filt10_noEnv.txt \
+--m-sample-metadata-file ~/TOL/gg2/GrpClass_metadata.txt \
+--i-feature-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass_filt10_noEnv.qza \
+--o-visualization ~/TOL/gg2/GMTOLsong_gg2_empress_GrpClass_filt10_noEnv.qzv
+
+#filter the original filt5 table to exclude NA in ClassSimp
+qiime feature-table filter-samples \
+  --i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass_filt5.qza \
+  --m-metadata-file ~/TOL/gg2/GrpClass_metadata.txt \
+  --p-exclude-ids \
+  --p-where "ClassSimp='NA'" \
+  --o-filtered-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass_filt5.qza
+
+  #now make empress of filt5
+qiime empress community-plot \
+--i-tree /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.id.nwk.qza \
+--m-feature-metadata-file /home/mcdonadt/greengenes2/release/2024.09/2024.09.taxonomy.id.tsv.qza \
+--m-sample-metadata-file ~/TOL/gg2/GrpClass_metadata.txt \
+--i-feature-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass_filt5.qza \
+--o-visualization ~/TOL/gg2/GMTOLsong_gg2_empress_GrpClass_filt5_noNA.qzv
+
+#now filter original GrpClass to not have NA in ClassSimp
+qiime feature-table filter-samples \
+  --i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass.qza \
+  --m-metadata-file ~/TOL/gg2/GrpClass_metadata.txt \
+  --p-exclude-ids \
+  --p-where "ClassSimp='NA'" \
+  --o-filtered-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass.qza
+
+  #and then now group GrpClass by ClassSimp
+qiime feature-table group \
+--i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClass.qza \
+--p-axis sample \
+--m-metadata-file ~/TOL/gg2/GrpClass_metadata.txt \
+--m-metadata-column 'ClassSimp' \
+--p-mode sum \
+--o-grouped-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp.qza
+
+#and then now filter features to max 1 sample
+qiime feature-table filter-features \
+  --i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp.qza \
+  --p-max-samples 1 \
+  --o-filtered-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp_max1.qza
+
+  #now make empress of max1
+qiime empress community-plot \
+--i-tree /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.id.nwk.qza \
+--m-feature-metadata-file /home/mcdonadt/greengenes2/release/2024.09/2024.09.taxonomy.id.tsv.qza \
+--m-sample-metadata-file ~/TOL/gg2/GrpClass_metadata.txt \
+--i-feature-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp_max1.qza \
+--o-visualization ~/TOL/gg2/GMTOLsong_gg2_empress_GrpClassSimp_max1.qzv
+
+#now try rarefying to 10k and then empress
+
+qiime feature-table rarefy \
+  --i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp.qza \
+  --p-sampling-depth 10000 \
+  --o-rarefied-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp_10k.qza
+
+#filter 10k table to match 10k metadata
+qiime feature-table filter-samples \
+  --i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp_10k.qza \
+  --m-metadata-file ~/TOL/gg2/GrpClass_metadata_10k.txt \
+  --o-filtered-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp_10kf.qza
+
+#now make empress of 10k
+qiime empress community-plot \
+--i-tree /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.id.nwk.qza \
+--m-feature-metadata-file /home/mcdonadt/greengenes2/release/2024.09/2024.09.taxonomy.id.tsv.qza \
+--m-sample-metadata-file ~/TOL/gg2/GrpClass_metadata_10k.txt \
+--i-feature-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp_10kf.qza \
+--o-visualization ~/TOL/gg2/GMTOLsong_gg2_empress_GrpClassSimp_10k.qzv
+
+#not working try 50k
+
+qiime feature-table rarefy \
+  --i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp.qza \
+  --p-sampling-depth 50000 \
+  --o-rarefied-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp_50k.qza
+
+#now make empress of 50k
+qiime empress community-plot \
+--i-tree /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.id.nwk.qza \
+--m-feature-metadata-file /home/mcdonadt/greengenes2/release/2024.09/2024.09.taxonomy.id.tsv.qza \
+--m-sample-metadata-file ~/TOL/gg2/GrpClass_metadata.txt \
+--i-feature-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp_50k.qza \
+--o-visualization ~/TOL/gg2/GMTOLsong_gg2_empress_GrpClassSimp_50k.qzv
+
+#try 100 to test
+qiime feature-table rarefy \
+  --i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp.qza \
+  --p-sampling-depth 100 \
+  --o-rarefied-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp_100.qza
+
+#now make empress of 100
+qiime empress community-plot \
+--i-tree /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.id.nwk.qza \
+--m-feature-metadata-file /home/mcdonadt/greengenes2/release/2024.09/2024.09.taxonomy.id.tsv.qza \
+--m-sample-metadata-file ~/TOL/gg2/GrpClass_metadata.txt \
+--i-feature-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp_100.qza \
+--o-visualization ~/TOL/gg2/GMTOLsong_gg2_empress_GrpClassSimp_100.qzv
+
+#now try filtering out reads that don't make up 0.1 fraction of  table
+qiime feature-table filter-features-conditionally \
+  --i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp.qza \
+  --p-abundance 0.1 \
+  --p-prevalence 0 \
+  --o-filtered-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp0.1.qza
+
+#summarize table
+qiime feature-table summarize \
+  --i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp_10k_0.1.qza \
+  --o-visualization ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp_10k_0.1.qzv
+#now make empress of 10k 0.1
+qiime empress community-plot \
+--i-tree /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.id.nwk.qza \
+--m-feature-metadata-file /home/mcdonadt/greengenes2/release/2024.09/2024.09.taxonomy.id.tsv.qza \
+--m-sample-metadata-file ~/TOL/gg2/GrpClass_metadata.txt \
+--i-feature-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_GrpClassSimp0.1.qza \
+--o-visualization ~/TOL/gg2/GMTOLsong_gg2_empress_GrpClassSimp0.1.qzv
+
+#not working at all. Now I want to do a Unifrac of all samples in GMTOL so need to run a large core metrics
+
+qiime feature-table merge \
+   --i-tables ~/TOL/minich/GMTOLsong_table2024.qza \
+  --i-tables ~/TOL/minich/EMP500_table.qza \
+  --o-merged-table ~/TOL/final/GMTOLsong_table2025.qza
+
+  #merge seqs
+qiime feature-table merge-seqs \
+  --i-data ~/TOL/minich/GMTOLsong_seqs2024.qza \
+  --i-data ~/TOL/minich/EMP500_seqs.qza \
+  --o-merged-data ~/TOL/final/GMTOLsong_seqs2025.qza
+
+  #and then filter table to match these seqs
+qiime feature-table filter-features \
+  --i-table ~/TOL/final/GMTOLsong_table2025.qza \
+  --m-metadata-file ~/TOL/minich/GMTOLsong_seqs2024_ALL.qza \
+  --o-filtered-table ~/TOL/final/GMTOLsong_table2025f.qza
+
+#now filter seqs to match table
+qiime feature-table filter-seqs \
+  --i-data ~/TOL/minich/GMTOLsong_seqs2024_ALL.qza \
+  --m-metadata-file ~/TOL/final/GMTOLsong_table2025f.qza \
+  --o-filtered-data ~/TOL/final/GMTOLsong_seqs2025_ALLf.qza
+ 
+  #run greengenes2 on table with greengenes2 package on non V3V4
+    qiime greengenes2 non-v4-16s \
+   --i-table GMTOLsong_table2025f.qza \
+    --i-sequences ~/TOL/minich/GMTOLsong_seqs2025_ALLf.qza \
+    --i-backbone /home/mcdonadt/greengenes2/release/2024.09/2024.09.backbone.full-length.fna.qza \
+    --o-mapped-table GMTOLsong_table2025f_gg2.qza \
+    --o-representatives GMTOLsong_seqs2025_gg2.qza \
+    --verbose
