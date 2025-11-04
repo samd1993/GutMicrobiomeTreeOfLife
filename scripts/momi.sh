@@ -1,6 +1,6 @@
-srun --time=2:00:00 --partition=short --mem=24G -n 4 --pty bash -l 
+srun --time=1:00:00 --partition=short --mem=24G -n 4 --pty bash -l 
 zsh
-conda activate qiime2-amplicon-2024.10
+conda activate qiime2-amplicon-2025.7
 
 #download 16S data from qiita study ID: 11366 using qiita documentation for pulling studies
 wget "https://qiita.ucsd.edu/public_download/?data=raw&study_id=11366&data_type=16S" -O "11366_16S_raw_data.zip"
