@@ -769,7 +769,7 @@ for file in *.qza; do
     echo "Finishing deblur job"
 done
 
-srun --time=1:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
+srun --time=300:00:00 --partition=short --mem=12G -n 1 --pty bash -l 
 zsh
 conda activate /home/sdegregori/miniconda3/envs/qiime2-2023.7 
 
@@ -5942,3 +5942,39 @@ qiime feature-table filter-seqs \
     --o-mapped-table GMTOLsong_table2025f_gg2.qza \
     --o-representatives GMTOLsong_seqs2025_gg2.qza \
     --verbose
+
+#download only metagenomic raw data from study ID 9413 with qiita wget
+wget “https://qiita.ucsd.edu/public_download/?data=raw&study_id=11166&data_type=Metagenomic” -O “11166song.zip”
+#now for 14696
+wget “https://qiita.ucsd.edu/public_download/?data=raw&study_id=14696&data_type=Metagenomic” -O “14696song.zip”
+#now need to consolodiate metdata
+ls /qmounts/qiita_data/per_sample_FASTQ/154180
+ls /qmounts/qiita_data/per_sample_FASTQ/154180 | wc -l
+ls /ddn_scratch/sdegregori/tolfastq/song11
+unzip 11166song.zip UNZIP_DISABLE_ZIPBOMB_DETECTION=TRUE
+ls /qmounts/qiita_data/per_sample_FASTQ/99857
+
+#downloading host genome datasets
+ conda create -n ncbi_datasets
+    conda activate ncbi_datasets
+    conda install -c conda-forge ncbi-datasets-cli
+
+  mkdir HostDownloads
+    cd HostDownloads
+    while read species; do
+      datasets download genome taxon "$species" --assembly-level complete --filename "$species"_genome.zip
+    done < ../ncbi_hostfiltering_genomes_list.txt
+
+      while read species; do
+      datasets download genome taxon '$species' --filename "$species"_genome0.zip
+    done < ../ncbi_hostfiltering_genomes_list_5.txt
+
+    datasets download genome taxon "Equus ferus" --filename "test"_genome0.zip 
+
+#checking minich and emp files because I think there is naming issue realted to qiita with ASV vs ID format
+
+#summarize minich_deblur_150_2021_table.qza and minich_metadata.txt
+qiime feature-table summarize \
+  --i-table minich_deblur_150_2021_table.qza \
+  --m-sample-metadata-file minich_metadata.txt \
+  --o-visualization minich_deblur_150_2021_table.qzv
