@@ -1,6 +1,6 @@
-srun --time=6:00:00 --partition=short --mem=64G -n 4 --pty bash -l 
+srun --time=8:00:00 --partition=short --mem=32G -n 1 --pty bash -l 
 zsh
-conda activate qiime2-2023.7
+conda activate qiime2-amplicon-2025.7
 
 srun --time=2:00:00 --partition=short --mem=64G -n 1  --cpus-per-task=4 --pty bash -l
 zsh
@@ -405,4 +405,273 @@ qiime tools export \
       --p-threads 4 \
       --o-tree ~/momi/sepp_tree_v4.qza
 
+  #now run core metrics with v4 sepp tree
+#but first filter merged table to match tree
+qiime phylogeny filter-table \
+  --i-table ~/momi/merged_dada2_table.qza \
+  --i-tree ~/momi/sepp_tree_v4.qza \
+  --o-filtered-table ~/momi/merged_table_dada2_v4sepp.qza
 
+#now run core metrics
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ~/momi/sepp_tree_v4.qza \
+  --i-table ~/momi/merged_table_dada2_v4sepp.qza \
+  --p-sampling-depth 1000 \
+  --p-n-jobs-or-threads auto \
+  --m-metadata-file ~/momi/merged_metadata2.txt \
+  --output-dir ~/momi/core_metrics_results_sepp_v4
+
+#ok so now I need to extract V4 reads at all the raw imported seq files pre-dada2
+qiime feature-classifier extract-reads  \
+  --i-sequences ~/momi/aus/aus_single_end.qza  \
+  --p-f-primer GTGCCAGCMGCCGCGGTAA \
+  --p-r-primer GGACTACHVGGGTWTCTAAT \
+  --p-trunc-len 150 \
+  --p-min-length 75 \
+  --p-n-jobs 4 \
+  --o-reads ~/momi/aus/seq_aus_V4_raw.qza
+
+  qiime feature-classifier extract-reads  \
+    --i-sequences ~/momi/US/US_dada2_rep_seqs.qza  \
+    --p-f-primer GTGCCAGCMGCCGCGGTAA \
+    --p-r-primer GGACTACHVGGGTWTCTAAT \
+    --p-trunc-len 150 \
+    --p-min-length 75 \
+    --p-n-jobs 4 \
+    --o-reads ~/momi/US/seq_US_V4_rep.qza
+
+    qiime feature-classifier extract-reads  \
+      --i-sequences ~/momi/spain/spain_seqs_dada2.qza \
+      --p-f-primer GTGCCAGCMGCCGCGGTAA \
+      --p-r-primer GGACTACHVGGGTWTCTAAT \
+      --p-trunc-len 150 \
+      --p-min-length 75 \
+      --p-n-jobs 4 \
+      --o-reads ~/momi/spain/seq_spain_V4_rep.qza
+
+
+#ok now merge these v4 extracted rep seqs
+qiime feature-table merge-seqs \
+  --i-data ~/momi/aus/seq_aus_V4.qza \
+  --i-data ~/momi/US/seq_US_V4_rep.qza \
+  --i-data ~/momi/spain/seq_spain_V4_rep.qza \
+  --o-merged-data ~/momi/merged_seqs_dada_v4_rep.qza
+
+  #now run dada2 at 150bp on merged seqs
+qiime dada2 denoise-single \
+  --i-demultiplexed-seqs ~/momi/merged_seqs_dada_v4_rep.qza \
+  --p-trunc-len 150 \
+  --p-trim-left 0 \
+  --p-n-threads 4 \
+  --o-table ~/momi/merged_table_dada2_v4_rep2.qza \
+  --o-representative-sequences ~/momi/merged_seqs_dada2_v4_rep2.qza \
+  --o-denoising-stats ~/momi/merged_stats_dada2_v4_rep2.qza
+
+  #so above fails
+  #but I can build a sepp tree again
+  qiime fragment-insertion sepp \
+    --i-representative-sequences ~/momi/merged_seqs_dada_v4_rep.qza \
+    --i-reference-database ~/momi/sepp-refs-gg-13-8.qza \
+    --o-placements ~/momi/sepp_placed_seqs_v4_rep.qza \
+    --p-threads 16 \
+    --o-tree ~/momi/sepp_tree_v4_rep.qza
+
+    #now make a core metrics 
+    #but first filter merged table to match tree
+qiime phylogeny filter-table \
+  --i-table ~/momi/merged_dada2_table.qza \
+  --i-tree ~/momi/sepp_tree_v4_rep.qza \
+  --o-filtered-table ~/momi/merged_table_dada2_v4_rep_f.qza
+
+#and then core metrics
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ~/momi/sepp_tree_v4_rep.qza \
+  --i-table ~/momi/merged_table_dada2_v4_rep_f.qza \
+  --p-sampling-depth 1000 \
+  --p-n-jobs-or-threads auto \
+  --m-metadata-file ~/momi/merged_metadata2.txt \
+  --output-dir ~/momi/core_metrics_results_sepp_v4_rep 
+
+#ok so now I am going to try to run q2-cutadapt on raw data single end just at 515F position
+qiime cutadapt trim-single \
+  --i-demultiplexed-sequences ~/momi/aus/aus_single_end.qza \
+  --p-front GTGCCAGCMGCCGCGGTAA \
+  --p-error-rate 0.1 \
+  --o-trimmed-sequences ~/momi/aus/aus_single_end_cutadapt.qza \
+  --p-cores 4
+
+#now run cutadapt on US single end
+qiime cutadapt trim-single \
+  --i-demultiplexed-sequences ~/momi/US/US_single_end_demux.qza \
+  --p-front GTGCCAGCMGCCGCGGTAA \
+  --p-error-rate 0.1 \
+  --o-trimmed-sequences ~/momi/US/US_demux_cutadapt.qza \
+  --p-cores 4
+
+#now do cutadapt on Spain
+qiime cutadapt trim-single \
+  --i-demultiplexed-sequences ~/momi/spain/spain_single_end.qza \
+  --p-front GTGCCAGCMGCCGCGGTAA \
+  --p-error-rate 0.1 \
+  --o-trimmed-sequences ~/momi/spain/spain_demux_cutadapt.qza \
+  --p-cores 4
+
+#now run dada2 on each of these cutadapt outputs
+qiime dada2 denoise-single \
+  --i-demultiplexed-seqs ~/momi/aus/aus_single_end_cutadapt.qza \
+  --p-trunc-len 150 \
+  --p-trim-left 0 \
+  --p-n-threads 4 \
+  --o-table ~/momi/aus/aus_dada2_table_cutadapt.qza \
+  --o-representative-sequences ~/momi/aus/aus_dada2_rep_seqs_cutadapt.qza \
+  --o-denoising-stats ~/momi/aus/aus_dada2_stats_cutadapt.qza
+
+  qiime dada2 denoise-single \
+    --i-demultiplexed-seqs ~/momi/US/US_demux_cutadapt.qza \
+    --p-trunc-len 150 \
+    --p-trim-left 0 \
+    --p-n-threads 16 \
+    --o-table ~/momi/US/US_dada2_table_cutadapt.qza \
+    --o-representative-sequences ~/momi/US/US_dada2_rep_seqs_cutadapt.qza \
+    --o-denoising-stats ~/momi/US/US_dada2_stats_cutadapt.qza
+
+    qiime dada2 denoise-single \
+      --i-demultiplexed-seqs ~/momi/spain/spain_demux_cutadapt.qza \
+      --p-trunc-len 150 \
+      --p-trim-left 0 \
+      --p-n-threads 16 \
+      --o-table ~/momi/spain/spain_dada2_table_cutadapt.qza \
+      --o-representative-sequences ~/momi/spain/spain_dada2_rep_seqs_cutadapt.qza \
+      --o-denoising-stats ~/momi/spain/spain_dada2_stats_cutadapt.qza
+
+      #now merge all the cutadapt dada2 tables
+qiime feature-table merge \
+  --i-tables ~/momi/aus/aus_dada2_table_cutadapt.qza \
+  --i-tables ~/momi/US/US_dada2_table_cutadapt.qza \
+  --i-tables ~/momi/spain/spain_dada2_table_cutadapt.qza \
+  --o-merged-table ~/momi/merged_table_dada2_cutadapt.qza
+
+#merge cutadapt dada2 rep seqs
+qiime feature-table merge-seqs \
+  --i-data ~/momi/aus/aus_dada2_rep_seqs_cutadapt.qza \
+  --i-data ~/momi/US/US_dada2_rep_seqs_cutadapt.qza \
+  --i-data ~/momi/spain/spain_dada2_rep_seqs_cutadapt.qza \
+  --o-merged-data ~/momi/merged_seqs_dada_v4_cutadapt.qza
+
+  #export seqs and table
+qiime tools export \
+  --input-path ~/momi/merged_seqs_dada_v4_cutadapt.qza \
+  --output-path ~/momi/exported_seqs_dada_v4_cutadapt
+qiime tools export \
+  --input-path ~/momi/merged_table_dada2_cutadapt.qza \
+  --output-path ~/momi/exported_table_dada2_cutadapt
+#now import these back
+qiime tools import \
+  --type 'FeatureData[Sequence]' \
+  --input-path ~/momi/exported_seqs_dada_v4_cutadapt/dna-sequences.fasta \
+  --output-path ~/momi/merged_seqs_dada_v4_cutadapt2.qza
+qiime tools import \
+  --type 'FeatureTable[Frequency]' \
+  --input-path ~/momi/exported_table_dada2_cutadapt/feature-table.biom \
+  --output-path ~/momi/merged_table_dada2_cutadapt2.qza
+
+  
+  #and then filter against greengnes2 using filter gg2
+  qiime greengenes2 filter-features \
+    --i-feature-table ~/momi/merged_table_dada2_cutadapt2.qza \
+    --i-reference /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.id.nwk.qza \
+    --o-filtered-feature-table ~/momi/merged_table_dada2_cutadapt_gg2_f.qza
+
+  #now run core metrics
+  qiime diversity core-metrics-phylogenetic \
+    --i-phylogeny /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.id.nwk.qza \
+    --i-table ~/momi/merged_table_dada2_cutadapt_gg2_f.qza \
+    --p-sampling-depth 1000 \
+    --p-n-jobs-or-threads auto \
+    --m-metadata-file ~/momi/merged_metadata2.txt \
+    --output-dir ~/momi/core_metrics_results_cutadapt_gg2_f
+
+    #doesnt work. Trying non 16S method
+    qiime greengenes2 non-v4-16s \
+      --i-table ~/momi/merged_table_dada2_cutadapt2.qza \
+        --i-sequences ~/momi/merged_seqs_dada_v4_cutadapt2.qza \
+        --i-backbone /home/mcdonadt/greengenes2/release/2024.09/2024.09.backbone.full-length.fna.qza \
+        --o-mapped-table ~/momi/merged_table_dada2_cutadapt_gg2_f2.qza \
+        --o-representatives ~/momi/seqs_gg2_dada2_cutadapt.qza \
+        --verbose
+
+    #now run core metrics
+    qiime diversity core-metrics-phylogenetic \
+      --i-phylogeny /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.id.nwk.qza \
+      --i-table ~/momi/merged_table_dada2_cutadapt_gg2_f2.qza \
+      --p-sampling-depth 1000 \
+      --p-n-jobs-or-threads auto \
+      --m-metadata-file ~/momi/merged_metadata2.txt \
+      --output-dir ~/momi/core_metrics_results_cutadapt_gg2_f2
+
+  #ok so now I want to run vsearch on the cutadapt seqs before denoising using dereplication
+qiime vsearch dereplicate-sequences \
+  --i-sequences ~/momi/US/US_demux_cutadapt.qza \
+  --o-dereplicated-table ~/momi/US/US_derep_ca_table.qza \
+  --o-dereplicated-sequences ~/momi/US/US_derep_ca_seqs.qza
+
+  qiime vsearch dereplicate-sequences \
+    --i-sequences ~/momi/aus/aus_single_end_cutadapt.qza \
+    --o-dereplicated-table ~/momi/aus/aus_derep_ca_table.qza \
+    --o-dereplicated-sequences ~/momi/aus/aus_derep_ca_seqs.qza
+
+    qiime vsearch dereplicate-sequences \
+      --i-sequences ~/momi/spain/spain_demux_cutadapt.qza \
+      --o-dereplicated-table ~/momi/spain/spain_derep_ca_table.qza \
+      --o-dereplicated-sequences ~/momi/spain/spain_derep_ca_seqs.qza
+
+      #now merge these derep tables and seqs
+qiime feature-table merge \
+  --i-tables ~/momi/US/US_derep_ca_table.qza \
+  --i-tables ~/momi/aus/aus_derep_ca_table.qza \
+  --i-tables ~/momi/spain/spain_derep_ca_table.qza \
+  --o-merged-table ~/momi/merged_derep_ca_table.qza
+
+  qiime feature-table merge-seqs \
+    --i-data ~/momi/US/US_derep_ca_seqs.qza \
+    --i-data ~/momi/aus/aus_derep_ca_seqs.qza \
+    --i-data ~/momi/spain/spain_derep_ca_seqs.qza \
+    --o-merged-data ~/momi/merged_derep_ca_seqs.qza
+
+  #now export both
+  qiime tools export \
+    --input-path ~/momi/merged_derep_ca_seqs.qza \
+    --output-path ~/momi/exported_merged_derep_ca_seqs
+
+  qiime tools export \
+    --input-path ~/momi/merged_derep_ca_table.qza \
+    --output-path ~/momi/exported_merged_derep_ca_table
+
+#now import these back
+qiime tools import \
+  --type 'FeatureData[Sequence]' \
+  --input-path ~/momi/exported_merged_derep_ca_seqs/dna-sequences.fasta \
+  --output-path ~/momi/merged_derep_ca_seqs2.qza
+
+  qiime tools import \
+    --type 'FeatureTable[Frequency]' \
+    --input-path ~/momi/exported_merged_derep_ca_table/feature-table.biom \
+    --output-path ~/momi/merged_derep_ca_table2.qza
+
+#now run greengenes2 filter
+qiime greengenes2 filter-features \
+  --i-feature-table ~/momi/merged_derep_ca_table2.qza \
+  --i-reference /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.id.nwk.qza \
+  --o-filtered-feature-table ~/momi/merged_derep_ca_table_gg2_f.qza
+
+#seems to lose everything
+
+#try non V4 method
+qiime greengenes2 non-v4-16s \
+  --i-table ~/momi/merged_derep_ca_table2.qza \
+    --i-sequences ~/momi/merged_derep_ca_seqs2.qza \
+    --i-backbone /home/mcdonadt/greengenes2/release/2024.09/2024.09.backbone.full-length.fna.qza \
+    --p-threads 4 \
+    --o-mapped-table ~/momi/merged_derep_ca_table_gg2_f2.qza \
+    --o-representatives ~/momi/seqs_gg2_merged_derep_ca.qza \
+    --verbose

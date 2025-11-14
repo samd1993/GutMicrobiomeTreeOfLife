@@ -5978,3 +5978,4 @@ qiime feature-table summarize \
   --i-table minich_deblur_150_2021_table.qza \
   --m-sample-metadata-file minich_metadata.txt \
   --o-visualization minich_deblur_150_2021_table.qzv
+
