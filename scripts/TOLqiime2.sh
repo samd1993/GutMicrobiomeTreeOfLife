@@ -773,9 +773,9 @@ srun --time=300:00:00 --partition=short --mem=12G -n 1 --pty bash -l
 zsh
 conda activate /home/sdegregori/miniconda3/envs/qiime2-2023.7 
 
-srun --time=1:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
+srun --time=4:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
 zsh
-conda activate qiime2-amplicon-2024.10
+conda activate qiime2-amplicon-2025.7
 
 srun --time=12:00:00 --partition=short --mem=64G -n 4 --pty bash -l 
 zsh
@@ -5979,3 +5979,259 @@ qiime feature-table summarize \
   --m-sample-metadata-file minich_metadata.txt \
   --o-visualization minich_deblur_150_2021_table.qzv
 
+
+#ok now I want to check primer difference so trying to run core metrics on an old GMTOL file. These will be in ~/TOL/minich use GMTOLsong_unrooted-tree2024f2.qza and use GMTOLsong_table2024f2.qza  and then use ~/TOL/final/Jul11_25_GMTOLsong_metadata_all.txt
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny ~/TOL/minich/GMTOLsong_rooted_tree2024.qza \ 
+  --i-table ~/TOL/minich/GMTOLsong_table2024f2.qza \
+  --p-sampling-depth 600 \
+  --m-metadata-file ~/TOL/final/Jul11_25_GMTOLsong_metadata_all.txt \
+  --p-n-jobs-or-threads auto \
+  --output-dir ~/TOL/minich/core-metrics-results-GMTOLsong_table2024f2_600
+
+  cp ~/core.sh ~/scripts/coreTOL.sh
+  vim ~/scripts/coreTOL.sh
+
+#trying taxa bar plot again
+qiime taxa barplot \
+  --i-table ~/TOL/phylo/GMTOLsong_table2024_N20_f2all_GrpVertInvert_sum.qza \
+  --i-taxonomy ~/TOL/phylo/GMTOLsong_taxonomyN20all_2024f2.qza \
+  --o-visualization ~/TOL/phylo/taxaonomy_GMTOLsong_table2024_N20_f2all_GrpVertInvert_barplot.qzv
+
+  #now collapse GMTOLsong_table2024_N20_f2all_gg2_f.qza located in TOL/final to Phylum and use the Nov20_25_GMTOL_metadata_all.txt there as well and then use Daniel's taxonomy file /home/mcdonadt/greengenes2/release/2024.09/2024.09.taxonomy.id.tsv.qza to collapse to Phylum
+
+qiime taxa collapse \
+  --i-table ~/TOL/final/GMTOLsong_table2024_N20_f2all_gg2_f.qza \
+  --i-taxonomy /home/mcdonadt/greengenes2/release/2024.09/2024.09.taxonomy.id.tsv.qza \
+  --p-level 2 \
+  --o-collapsed-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_Phylum.qza
+
+  #now convert table to relative abundance
+qiime feature-table relative-frequency \
+  --i-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_Phylum.qza \
+  --o-relative-frequency-table ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_Phylum_rel.qza
+
+#now export to tsv
+qiime tools export \
+  --input-path ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_Phylum_rel.qza \
+  --output-path ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_Phylum_rel
+
+biom convert \
+  --input-fp ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_Phylum_rel/feature-table.biom \
+  --output-fp ~/TOL/gg2/GMTOLsong_table2024_N20_f2all_gg2_f_Phylum_rel.tsv \
+  --to-tsv
+
+
+#Ok so I am going to use GMTOLsong_tablef.qza and GMTOLrepseqf.qza in the TOL/Merged folder and combine them with a new deblur output of EMPP500 and minich hindgut so first I need to run deblur on these in barnacle
+
+#deblur EMP500. Lets try checking EMP500_seqs.qza in the minich folder to see what qiime type artifact it is
+
+qiime tools peek ~/TOL/minich/EMP500_seqs.qza
+
+#import 104885_EMP500_16S_S1_L001_R2_001.fastq.gz 104885_EMP500_16S_S1_L001_R1_001.fastq.gz and 104885_EMP500_16S_S1_L001_I1_001.fastq.gz as EMP500_1_demux.qza. These are all in minich folder. Use EMP import method for EMP 16S
+
+qiime tools import \
+  --type 'EMPPairedEndSequences' \
+  --input-path ~/TOL/minich/EMP1 \
+  --output-path ~/TOL/minich/EMP500_1_seqs.qza 
+
+#import EMP2
+
+qiime tools import \
+  --type 'EMPPairedEndSequences' \
+  --input-path ~/TOL/minich/EMP2 \
+  --output-path ~/TOL/minich/EMP500_2_seqs.qza
+
+#now demultiplex EMP1 with 13114_prep_9957_20230201-075721.txt
+qiime demux emp-paired \
+  --i-seqs ~/TOL/minich/EMP500_1_seqs.qza \
+  --m-barcodes-file ~/TOL/minich/13114_prep_9957_20230201-075721.txt \
+  --m-barcodes-column 'barcode' \
+  --o-per-sample-sequences ~/TOL/minich/EMP500_1_demux.qza \
+  --p-no-golay-error-correction \
+  --o-error-correction-details ~/TOL/minich/EMP500_1_emp_stats.qza
+
+#now demultiplex EMP2 with 13114_prep_9958_20230201-075722.txt
+qiime demux emp-paired \
+  --i-seqs ~/TOL/minich/EMP500_2_seqs.qza \
+  --m-barcodes-file ~/TOL/minich/13114_prep_9958_20230201-075722.txt \
+  --m-barcodes-column 'barcode' \
+  --o-per-sample-sequences ~/TOL/minich/EMP500_2_demux.qza \
+  --p-no-golay-error-correction \
+  --o-error-correction-details ~/TOL/minich/EMP500_2_emp_stats.qza
+
+#now I want to run deblur on both EMP500 demuxed files at 150bp and then merge with GMTOLsong_tablef.qza and GMTOLrepseqf.qza
+
+qiime deblur denoise-16S \
+  --i-demultiplexed-seqs ~/TOL/minich/EMP500_1_demux.qza \
+  --p-trim-length 150 \
+  --p-sample-stats \
+  --o-representative-sequences ~/TOL/minich/EMP500_1_rep_seqs.qza \
+  --o-table ~/TOL/minich/EMP500_1_table.qza \
+  --o-stats ~/TOL/minich/EMP500_1_deblur_stats.qza \
+  --p-jobs-to-start 4
+
+qiime deblur denoise-16S \
+  --i-demultiplexed-seqs ~/TOL/minich/EMP500_2_demux.qza \
+  --p-trim-length 150 \
+  --p-sample-stats \
+  --o-representative-sequences ~/TOL/minich/EMP500_2_rep_seqs.qza \
+  --o-table ~/TOL/minich/EMP500_2_table.qza \
+  --o-stats ~/TOL/minich/EMP500_2_deblur_stats.qza \
+  --p-jobs-to-start 4
+
+#now I want to copy /qmounts/qiita_data/FASTQ/111875 files over to TOL/minich/fishredo and rename them to EMP standards for importing
+
+cp /qmounts/qiita_data/FASTQ/111875/* ~/TOL/minich/fishredo/
+
+#now rename files to EMP format. They are currently listed as 16S_FMP_S1_L002_I1_001.fastq.gz  16S_FMP_S1_L002_R2_001.fastq.gz 16S_FMP_S1_L002_R1_001.fastq.gz  
+
+mv ~/TOL/minich/fishredo/16S_FMP_S1_L002_I1_001.fastq.gz ~/TOL/minich/fishredo/barcodes.fastq.gz
+
+mv ~/TOL/minich/fishredo/16S_FMP_S1_L002_R1_001.fastq.gz ~/TOL/minich/fishredo/forward.fastq.gz
+
+mv ~/TOL/minich/fishredo/16S_FMP_S1_L002_R2_001.fastq.gz ~/TOL/minich/fishredo/reverse.fastq.gz
+
+#now import as EMP paired end
+qiime tools import \
+  --type 'EMPPairedEndSequences' \
+  --input-path ~/TOL/minich/fishredo/ \
+  --output-path ~/TOL/minich/fishredo/minich_fish_seqs.qza
+
+  #now  use 13414_prep_10454_20220714-121058.txt to demux
+
+qiime demux emp-paired \
+  --i-seqs ~/TOL/minich/fishredo/minich_fish_seqs.qza \
+  --m-barcodes-file ~/TOL/minich/13414_prep_10454_20220714-121058.txt \
+  --m-barcodes-column 'barcode' \
+  --o-per-sample-sequences ~/TOL/minich/fishredo/minich_fish_demux.qza \
+  --p-no-golay-error-correction \
+  --o-error-correction-details ~/TOL/minich/fishredo/minich_fish_emp_stats.qza
+
+#inspect the above seqs.qza file
+
+qiime tools peek ~/TOL/minich/fishredo/minich_fish_seqs.qza
+
+#note I am exporting my path to one in DDN
+
+export TMPDIR=/ddn_scratch/sdegregori/tmp
+
+#merge EMP 1 and 2 tables
+qiime feature-table merge \
+  --i-tables ~/TOL/minich/EMP500_1_table.qza \
+  --i-tables ~/TOL/minich/EMP500_2_table.qza \
+  --o-merged-table ~/TOL/minich/EMP500_table_merged.qza
+
+  #now merge EMP merged with GMTOLsong_tablef.qza
+qiime feature-table merge \
+  --i-tables ~/TOL/minich/EMP500_table_merged.qza \
+  --i-tables ~/TOL/Merged/GMTOLsong_tablef.qza \
+  --o-merged-table ~/TOL/minich/GMTOLsong_EMP_table_merged.qza
+
+#export the GMTOLsong_tablef.qza to biom
+qiime tools export \
+  --input-path ~/TOL/Merged/GMTOLsong_tablef.qza \
+  --output-path ~/TOL/Merged/GMTOLsong_tablef_exported
+
+#and then import back as qza
+qiime tools import \
+  --input-path ~/TOL/Merged/GMTOLsong_tablef_exported/feature-table.biom \
+  --type 'FeatureTable[Frequency]' \
+  --output-path ~/TOL/Merged/GMTOLsong_tablef_reimported.qza
+
+#now merge reimported with EMP merged
+qiime feature-table merge \
+  --i-tables ~/TOL/minich/EMP500_table_merged.qza \
+  --i-tables ~/TOL/Merged/GMTOLsong_table.qza \
+  --o-merged-table ~/TOL/minich/GMTOLsong_EMP_table_merged.qza
+
+#now try Emp with Noah_Insects_table2.qza as a test
+qiime feature-table merge \
+  --i-tables ~/TOL/minich/EMP500_table_merged.qza \
+  --i-tables ~/TOL/Noah_Insects_table2.qza \
+  --o-merged-table ~/TOL/minich/Noah_Insects_EMP_table_merged_test.qza
+
+  #now try V4human_table_Preschool_Adult.qza in human folder with Noah_Insects_table2.qza
+qiime feature-table merge \
+  --i-tables ~/TOL/human/V4human_table_Preschool_Adult.qza \
+  --i-tables ~/TOL/Noah_Insects_table2.qza \
+  --o-merged-table ~/TOL/human/Noah_Insects_Human_table_merged_test.qza
+
+  #now export EMP merged
+qiime tools export \
+  --input-path ~/TOL/minich/EMP500_table_merged.qza \
+  --output-path ~/TOL/minich/EMP500_table_merged_exported
+
+  #now activate qiime2-2023.7
+conda activate qiime2-2023.7
+
+#now import back as qza
+qiime tools import \
+  --input-path ~/TOL/minich/EMP500_table_merged_exported/feature-table.biom \
+  --type 'FeatureTable[Frequency]' \
+  --output-path ~/TOL/minich/EMP500_table_merged_reimported2.qza
+
+#now merge reimported with GMTOLsong_tablef.qza
+qiime feature-table merge \
+  --i-tables ~/TOL/minich/EMP500_table_merged_reimported2.qza \
+  --i-tables ~/TOL/Merged/GMTOLsong_tablef.qza \
+  --o-merged-table ~/TOL/minich/GMTOLsong_EMP_table_merged.qza
+
+  #test merge cancerqiita_gut_table.qza in cancer_qiita and microbetable.qza in marmot
+qiime feature-table merge \
+  --i-tables ~/cancer_qiita/cancerqiita_gut_table.qza \
+  --i-tables ~/marmot/microbetable.qza \
+  --o-merged-table ~/marmot/cancer_marmot_table_merged_test.qza
+
+qiime feature-table merge \
+  --i-tables ~/TOL/minich/EMP500_table_merged_reimported2.qza \
+  --i-tables ~/TOL/Merged/GMTOLsong_tableN30.qza \
+  --o-merged-table ~/TOL/minich/GMTOLsong_EMP_table_merged.qza
+
+#now summarize GMTOLsong_tableN30.qza
+qiime feature-table summarize \
+  --i-table ~/TOL/Merged/GMTOLsong_tableN30.qza \
+  --o-visualization ~/TOL/Merged/GMTOLsong_tableN30_summary.qzv
+
+  #and summarize just GMTOLsong_table.qza
+qiime feature-table summarize \
+  --i-table ~/TOL/Merged/GMTOLsong_table.qza \
+  --o-visualization ~/TOL/Merged/GMTOLsong_table_summary.qzv
+
+
+#summarize allTOLsong_table.qza
+qiime feature-table summarize \
+  --i-table ~/TOL/Merged/allTOLsong_table.qza \
+  --o-visualization ~/TOL/Merged/allTOLsong_table_summary.qzv
+
+     qiime feature-table merge \
+    --i-tables  ~/TOL/Merged/allTOLsong_table.qza \
+    --i-tables ~/TOL/Merged/merged_table_Jun2_GMTOL.qza \
+    --o-merged-table ~/TOL/Merged/GMTOLsong_table_test.qza
+
+    #test above allTOLsong_table.qza merge with human V4human_table_Preschool_Adult.qza
+      qiime feature-table merge \
+    --i-tables  ~/TOL/Merged/allTOLsong_table.qza \
+    --i-tables ~/TOL/human/V4human_table_Preschool_Adult.qza \
+    --o-merged-table ~/TOL/Merged/allTOL_human_table_test.qza
+
+    #and then try Jun2_GMTOL
+      qiime feature-table merge \
+    --i-tables  ~/TOL/Merged/merged_table_Jun2_GMTOL.qza \
+    --i-tables ~/TOL/human/V4human_table_Preschool_Adult.qza \
+    --o-merged-table ~/TOL/Merged/Jun2_GMTOL_human_table_test.qza
+
+    #and then summarize original allTOL and merged Jun2
+    qiime feature-table summarize \
+  --i-table ~/TOL/Merged/merged_table_Jun2_GMTOL.qza \
+  --o-visualization ~/TOL/Merged/merged_table_Jun2_GMTOL_summary2.qzv
+
+    qiime feature-table summarize \
+  --i-table ~/TOL/Merged/allTOLsong_table.qza \
+  --o-visualization ~/TOL/Merged/allTOLsong_table_summary2.qzv
+
+#now locally make a qzv of merged_table_Jun2_GMTOL.qza
+qiime feature-table summarize \
+  --i-table merged_table_Jun2_GMTOL.qza \
+  --o-visualization merged_table_Jun2_GMTOL_summary.qzv

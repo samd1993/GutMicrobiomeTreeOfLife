@@ -1,8 +1,8 @@
-srun --time=8:00:00 --partition=short --mem=32G -n 1 --pty bash -l 
+srun --time=1:00:00 --partition=short --mem=32G -n 4 --pty bash -l 
 zsh
 conda activate qiime2-amplicon-2025.7
 
-srun --time=2:00:00 --partition=short --mem=64G -n 1  --cpus-per-task=4 --pty bash -l
+srun --time=8:00:00 --partition=short --mem=64G -n 4  --cpus-per-task=4 --pty bash -l
 zsh
 conda activate qiime2-2023.7
 
@@ -442,8 +442,8 @@ qiime feature-classifier extract-reads  \
 
     qiime feature-classifier extract-reads  \
       --i-sequences ~/momi/spain/spain_seqs_dada2.qza \
-      --p-f-primer GTGCCAGCMGCCGCGGTAA \
-      --p-r-primer GGACTACHVGGGTWTCTAAT \
+      --p-f-primer GTGCCAGCMGCCGCGGTAA \ 
+      --p-r-primer GGACTACHVGGGTWTCTAAT \ 
       --p-trunc-len 150 \
       --p-min-length 75 \
       --p-n-jobs 4 \
@@ -664,7 +664,7 @@ qiime greengenes2 filter-features \
   --i-reference /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.id.nwk.qza \
   --o-filtered-feature-table ~/momi/merged_derep_ca_table_gg2_f.qza
 
-#seems to lose everything
+#seems to lose everything..no features 
 
 #try non V4 method
 qiime greengenes2 non-v4-16s \
@@ -675,3 +675,200 @@ qiime greengenes2 non-v4-16s \
     --o-mapped-table ~/momi/merged_derep_ca_table_gg2_f2.qza \
     --o-representatives ~/momi/seqs_gg2_merged_derep_ca.qza \
     --verbose
+
+
+#now run core metrics
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.id.nwk.qza \
+  --i-table ~/momi/merged_derep_ca_table_gg2_f2.qza \
+  --p-sampling-depth 1000 \
+  --p-n-jobs-or-threads auto \
+  --m-metadata-file ~/momi/merged_metadata2.txt \
+  --output-dir ~/momi/core_metrics_results_merged_derep_ca_gg2_f2
+
+#trying different tree method on pre dada2 cutadapt merged table2. try filtering on gg2 tree asv version
+qiime greengenes2 filter-features \
+  --i-feature-table ~/momi/merged_derep_ca_table2.qza \
+  --i-reference /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.asv.nwk.qza \
+  --o-filtered-feature-table ~/momi/merged_table_dada2_cutadapt_gg2_f_asv.qza
+
+#now run core metrics on merged_derep_ca_table_gg2_f.qza
+
+#trying extract with just forward
+
+ qiime feature-classifier extract-reads  \
+    --i-sequences ~/momi/US/US_dada2_rep_seqs.qza  \
+    --p-f-primer GTGCCAGCMGCCGCGGTAA \
+    --p-trunc-len 150 \
+    --p-min-length 50 \
+    --p-n-jobs 4 \
+    --o-reads ~/momi/US/seq_US_V4_rep.qza
+
+    mv /home/sdegregori/momi/aus/fastq/*fastq.gz /ddn_scratch/sdegregori/momi/fastq/
+
+    #head this fasta file SRR28960816_Full-length_16S_survey_of_human_milk_samples_from_the_BLOSOM_birth_cohort_subreads.fastq.gz in /ddn_scratch/sdegregori/momi/fastq/
+
+    zcat /ddn_scratch/sdegregori/momi/fastq/SRR28960750_Full-length_16S_survey_of_human_milk_samples_from_the_BLOSOM_birth_cohort_subreads.fastq.gz | head -40
+
+# use /home/mcdonadt/2025.11.21-duckdb-extract/emp_v4_100nt_gg2-2024.9.biom import to qiime2 and then use the gg2 tree to run core metrics
+
+qiime tools import \
+  --type 'FeatureTable[Frequency]' \
+  --input-path /home/mcdonadt/2025.11.21-duckdb-extract/emp_v4_100nt_gg2-2024.9.biom \
+  --output-path ~/momi/emp_v4_100nt_gg2-2024.9.qza
+
+  #make a table.qzv
+qiime feature-table summarize \
+  --i-table ~/momi/emp_v4_100nt_gg2-2024.9.qza \
+  --o-visualization ~/momi/emp_v4_100nt_gg2-2024.9.qzv
+
+#now run core metrics
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.asv.nwk.qza \
+  --i-table ~/momi/emp_v4_100nt_gg2-2024.9.qza \
+  --p-sampling-depth 1000 \
+  --p-n-jobs-or-threads auto \
+  --m-metadata-file ~/momi/momi_metadata_merged3.txt \
+  --output-dir ~/momi/core_metrics_results_emp_v4_100nt_gg2
+
+#redo above but at like 5000 sampling depth
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.asv.nwk.qza \
+  --i-table ~/momi/emp_v4_100nt_gg2-2024.9.qza \
+  --p-sampling-depth 5000 \
+  --p-n-jobs-or-threads auto \
+  --m-metadata-file ~/momi/momi_metadata_merged3.txt \
+  --output-dir ~/momi/core_metrics_results_emp_v4_100nt_gg2_5k
+
+#now do core metrics of just US post deblur
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.asv.nwk.qza \
+  --i-table ~/momi/US/US_deblur_table.qza \
+  --p-sampling-depth 2000 \
+  --p-n-jobs-or-threads auto \
+  --m-metadata-file ~/momi/US/US_metadata.txt \
+  --output-dir ~/momi/core_metrics_results_US_deblur
+
+#do core metrics on US_dada2_table_cutadapt.qza
+
+#first filter table to gg2
+qiime greengenes2 filter-features \
+  --i-feature-table ~/momi/US/US_dada2_table_cutadapt.qza \
+  --i-reference /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.asv.nwk.qza \
+  --o-filtered-feature-table ~/momi/US/US_dada2_table_cutadapt_gg2_f.qza
+
+  #filter tablegg2_dada2.qza to continent equal to US and then do core metrics at 1000
+qiime feature-table filter-samples \
+  --i-table ~/momi/tablegg2_dada2.qza \
+  --m-metadata-file ~/momi/merged_metadata2.txt \
+  --o-filtered-table ~/momi/tablegg2_dada2_US.qza \
+  --p-where "continent='US'"
+
+#now core metrics
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.asv.nwk.qza \
+  --i-table ~/momi/tablegg2_dada2_US.qza \
+  --p-sampling-depth 1000 \
+  --p-n-jobs-or-threads auto \
+  --m-metadata-file ~/momi/merged_metadata2.txt \
+  --output-dir ~/momi/core_metrics_results_tablegg2_dada2_US
+
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  #now redo coremetrics on the 100nt table but using mommi_metadata_merged5_qiitaUS.txt as new metadata
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.asv.nwk.qza \
+  --i-table ~/momi/emp_v4_100nt_gg2-2024.9.qza \
+  --p-sampling-depth 1000 \
+  --p-n-jobs-or-threads auto \
+  --m-metadata-file ~/momi/momi_metadata_merged5_qiitaUS.txt \
+  --output-dir ~/momi/core_metrics_results_emp_v4_100nt_gg2_momi_metadata_merged5_qiitaUS
+
+  #trying locally
+  qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny 2024.09.phylogeny.asv.nwk.qza \
+  --i-table emp_v4_100nt_gg2-2024.9.qza \
+  --p-sampling-depth 1000 \
+  --p-n-jobs-or-threads auto \
+  --m-metadata-file momi_metadata_merged5_qiitaUS.txt \
+  --output-dir core_metrics_results_emp_v4_100nt_gg2_momi_metadata_merged5_qiitaUS
+
+#locally export the above table
+qiime tools export \
+  --input-path emp_v4_100nt_gg2-2024.9.qza \
+  --output-path exported_emp_v4_100nt_gg2-2024.9
+
+  #now import back in
+qiime tools import \
+  --type 'FeatureTable[Frequency]' \
+  --input-path exported_emp_v4_100nt_gg2-2024.9/feature-table.biom \
+  --output-path emp_v4_100nt_gg2-2023.7.qza
+
+
+  #locally
+import os
+os.environ['R_HOME'] = '/usr/local/bin/R'
+exit()
+
+#trying to reinstall locally
+conda remove -n qiime2-amplicon-2025.10 --all
+conda clean --all
+
+CONDA_SUBDIR=osx-64 conda env create \
+  --name qiime2-amplicon-2025.10 \
+  --file https://raw.githubusercontent.com/qiime2/distributions/refs/heads/dev/2025.10/amplicon/released/qiime2-amplicon-macos-latest-conda.yml
+conda activate qiime2-amplicon-2025.10
+conda config --env --set subdir osx-64
+
+conda activate qiime2-amplicon-2025.10
+
+#now I want to import this new file: emp_v4_100nt_gg2-2024.9.biom on its own into qiime2-2023.7
+
+qiime tools import \
+  --type 'FeatureTable[Frequency]' \
+  --input-path emp_v4_100nt_gg2-2024.9.biom \
+  --output-path emp_v4_100nt_gg2-2024.9_2023.7.qza
+
+  #now rerun core metrics locally without full paths
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny 2024.09.phylogeny.asv.nwk.qza \
+  --i-table emp_v4_100nt_gg2-2024.9_2023.7.qza \
+  --p-sampling-depth 1000 \
+  --p-n-jobs-or-threads auto \
+  --m-metadata-file momi_metadata_merged5_qiitaUS.txt \
+  --output-dir core_metrics_results_emp_v4_100nt_gg2_momi_metadata_merged5_qiitaUS_2023.7
+
+#filter the above table to only include Frequency the metadata column to be above 200000 using the filter smaples --p-where Frequency>200000
+
+qiime feature-table filter-samples \
+  --i-table emp_v4_100nt_gg2-2024.9_2023.7.qza \
+  --m-metadata-file momi_metadata_merged5_qiitaUS.txt \
+  --o-filtered-table emp_v4_100nt_gg2-2024.9_2023.7_freq200k_f.qza \
+  --p-where "Frequency>200000"
+
+  #redo core metrics
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny 2024.09.phylogeny.asv.nwk.qza \
+  --i-table emp_v4_100nt_gg2-2024.9_2023.7_freq200k_f.qza \
+  --p-sampling-depth 1000 \
+  --p-n-jobs-or-threads auto \
+  --m-metadata-file momi_metadata_merged5_qiitaUS.txt \
+  --output-dir core_metrics_results_emp_v4_100nt_gg2_momi_metadata_merged5_qiitaUS_2023.7_freq200k
+
+#ok instead use this text file momi_200k_filter.txt to filter out samples from the emp_v4_100nt_gg2-2024.9_2023.7.qza table, make sure to use exclude
+
+qiime feature-table filter-samples \
+  --i-table emp_v4_100nt_gg2-2024.9_2023.7.qza \
+  --m-metadata-file momi_200k_filter.txt \
+  --o-filtered-table emp_v4_100nt_gg2-2024.9_2023.7_200k_f.qza \
+  --p-exclude-ids
+
+#now do core metrics
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny 2024.09.phylogeny.asv.nwk.qza \
+  --i-table emp_v4_100nt_gg2-2024.9_2023.7_200k_f.qza \
+  --p-sampling-depth 1000 \
+  --p-n-jobs-or-threads auto \
+  --m-metadata-file momi_metadata_merged5_qiitaUS.txt \
+  --output-dir core_metrics_results_emp_v4_100nt_gg2_momi_metadata_merged5_qiitaUS_2023.7_200k_filter
+
