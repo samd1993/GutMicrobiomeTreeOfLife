@@ -769,15 +769,15 @@ for file in *.qza; do
     echo "Finishing deblur job"
 done
 
-srun --time=300:00:00 --partition=short --mem=12G -n 1 --pty bash -l 
+srun --time=1:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
 zsh
 conda activate /home/sdegregori/miniconda3/envs/qiime2-2023.7 
 
-srun --time=4:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
+srun --time=3:00:00 --partition=short --mem=32G -n 1 --pty bash -l 
 zsh
 conda activate qiime2-amplicon-2025.7
 
-srun --time=12:00:00 --partition=short --mem=64G -n 4 --pty bash -l 
+srun --time=1:00:00 --partition=short --mem=64G -n 1 --pty bash -l 
 zsh
 conda activate /home/sdegregori/miniconda3/envs/qiime2-2023.2
 
@@ -6235,3 +6235,44 @@ qiime feature-table summarize \
 qiime feature-table summarize \
   --i-table merged_table_Jun2_GMTOL.qza \
   --o-visualization merged_table_Jun2_GMTOL_summary.qzv
+
+  #convert the GMTOLsong_tablef_exported biom table to tsv in the Merged folder
+biom convert \
+  --input-fp ~/TOL/Merged/GMTOLsong_tablef_exported/feature-table.biom \
+  --output-fp ~/TOL/Merged/GMTOLsong_tablef_exported/GMTOLsong_tablef.tsv \
+  --to-tsv
+
+  # locally export merged_table_Jun2_GMTOL.qza then convert to tsv
+qiime tools export \
+  --input-path merged_table_Jun2_GMTOL.qza \
+  --output-path merged_table_Jun2_GMTOL_exported
+
+biom convert \
+  --input-fp ./merged_table_Jun2_GMTOL_exported/feature-table.biom \
+  --output-fp ./merged_table_Jun2_GMTOL_exported/merged_table_Jun2_GMTOL.tsv \
+  --to-tsv
+
+
+  #I want to remake core-metrics-results-GMTOLsong_table2024_N20_f2all_gg2_f_600 with the new_metadata that is in the ~/TOL/final folder called Nov20_25_GMTOL_metadata_all.txt but this time do it with the N30 dataset
+
+
+#locally summarize GMTOLsong_table2024f2.qza
+qiime feature-table summarize \
+  --i-table GMTOLsong_table2024f2.qza \
+  --o-visualization GMTOLsong_table2024f2_summary.qzv
+
+  #summarize GMTOLsong_table2024_N20_f2all.qza in minich
+qiime feature-table summarize \
+  --i-table ~/TOL/minich/GMTOLsong_table2024_N20_f2all.qza \
+  --o-visualization ~/TOL/minich/GMTOLsong_table2024_N20_f2all_summary.qzv
+
+
+#on barnacle in minich folder do gg2 OTU picking on GMTOLsong_table2024f2.qza to generate a gg2 table and seqs outputs and put outputs in gg2 folder
+qiime greengenes2 non-v4-16s \
+   --i-table ~/TOL/minich/GMTOLsong_table2024f2.qza \
+    --i-sequences ~/TOL/minich/GMTOLsong_seqs2024f2.qza \
+    --i-backbone /home/mcdonadt/greengenes2/release/2024.09/2024.09.backbone.full-length.fna.qza \
+    --o-mapped-table ~/TOL/gg2/GMTOLsong_table2024f2_gg2.qza \
+    --o-representatives ~/TOL/gg2/GMTOLsong_seqs2024f2_gg2.qza \
+    --verbose
+

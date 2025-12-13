@@ -1,8 +1,8 @@
-srun --time=1:00:00 --partition=short --mem=32G -n 4 --pty bash -l 
+srun --time=2:00:00 --partition=short --mem=32G -n 1 --pty bash -l 
 zsh
 conda activate qiime2-amplicon-2025.7
 
-srun --time=8:00:00 --partition=short --mem=64G -n 4  --cpus-per-task=4 --pty bash -l
+srun --time=2:00:00 --partition=short --mem=64G -n 1 --pty bash -l
 zsh
 conda activate qiime2-2023.7
 
@@ -871,4 +871,206 @@ qiime diversity core-metrics-phylogenetic \
   --p-n-jobs-or-threads auto \
   --m-metadata-file momi_metadata_merged5_qiitaUS.txt \
   --output-dir core_metrics_results_emp_v4_100nt_gg2_momi_metadata_merged5_qiitaUS_2023.7_200k_filter
+
+#import /home/mcdonadt/2025.11.21-duckdb-extract/emp_v4_100nt_gg2-2024.9.biom into qiime and then summarize it with momi_metadata_merged5_qiitaUS.txt
+
+qiime tools import \
+  --type 'FeatureTable[Frequency]' \
+  --input-path /home/mcdonadt/2025.11.21-duckdb-extract/emp_v4_100nt_gg2-2024.9.biom \
+  --output-path ~/momi/emp_v4_100nt_gg2_v2.qza
+
+#make a table.qzv
+qiime feature-table summarize \
+  --i-table ~/momi/emp_v4_100nt_gg2_v2.qza \
+  --m-sample-metadata-file ~/momi/momi_metadata_merged5_qiitaUS.txt \
+  --o-visualization ~/momi/emp_v4_100nt_gg2_v2.qzv
+
+  #now do core metrics
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.asv.nwk.qza \
+  --i-table ~/momi/emp_v4_100nt_gg2_v2.qza \
+  --p-sampling-depth 1000 \
+  --p-n-jobs-or-threads auto \
+  --m-metadata-file ~/momi/momi_metadata_merged5_qiitaUS.txt \
+  --output-dir ~/momi/core_metrics_results_emp_v4_100nt_gg2_v2
+
+  #now filter the table to exclude samples where blank = yes
+qiime feature-table filter-samples \
+  --i-table ~/momi/emp_v4_100nt_gg2_v2.qza \
+  --m-metadata-file ~/momi/momi_metadata_merged5_qiitaUS.txt \
+  --o-filtered-table ~/momi/emp_v4_100nt_gg2_v2_noblanks.qza \
+  --p-where "blank='Yes'" \
+  --p-exclude-ids
+
+  #then do core metrics
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.asv.nwk.qza \
+  --i-table ~/momi/emp_v4_100nt_gg2_v2_noblanks.qza \
+  --p-sampling-depth 1000 \
+  --p-n-jobs-or-threads auto \
+  --m-metadata-file ~/momi/momi_metadata_merged5_qiitaUS.txt \
+  --output-dir ~/momi/core_metrics_results_emp_v4_100nt_gg2_v2_noblanks
+
+  #now do alpha rarefaction for noblanks table up to 100k
+qiime diversity alpha-rarefaction \
+  --i-table ~/momi/emp_v4_100nt_gg2_v2_noblanks.qza \
+  --i-phylogeny /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.asv.nwk.qza \
+  --p-max-depth 10000 \
+  --m-metadata-file ~/momi/momi_metadata_merged5_qiitaUS.txt \
+  --o-visualization ~/momi/alpha_rarefaction_emp_v4_100nt_gg2_v2_noblanks10k.qzv
+
+#also do an alpha significance test on noblanks
+qiime diversity alpha-group-significance \
+  --i-alpha-diversity ~/momi/core_metrics_results_emp_v4_100nt_gg2_v2_noblanks/faith_pd_vector.qza \
+  --m-metadata-file ~/momi/momi_metadata_merged5_qiitaUS.txt \
+  --o-visualization ~/momi/alpha_significance_emp_v4_100nt_gg2_v2_noblanks_faith.qzv
+
+#redo core metrics on no blanks at 1000
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.asv.nwk.qza \
+  --i-table ~/momi/emp_v4_100nt_gg2_v2_noblanks.qza \
+  --p-sampling-depth 1000 \
+  --p-n-jobs-or-threads auto \
+  --m-metadata-file ~/momi/momi_metadata_merged5_qiitaUS.txt \
+  --output-dir ~/momi/core_metrics_results_emp_v4_100nt_gg2_v2_noblanks_1klog
+
+
+#do a community empress plot on the emp_v4_100nt_gg2_v2_noblanks table and gg2 tree and gg taxonomy
+#export ~/momi/emp_v4_100nt_gg2_v2_noblanks.qza first because i need to reimport in 2023.7
+qiime tools export \
+  --input-path ~/momi/emp_v4_100nt_gg2_v2_noblanks.qza \
+  --output-path ~/momi/exported_emp_v4_100nt_gg2_v2_noblanks
+
+conda activate qiime2-2023.7
+#now import back in 2023.7
+qiime tools import \
+  --type 'FeatureTable[Frequency]' \
+  --input-path ~/momi/exported_emp_v4_100nt_gg2_v2_noblanks/feature-table.biom \
+  --output-path ~/momi/emp_v4_100nt_gg2_v2_noblanks_2023.7.qza
+
+qiime empress community-plot \
+  --i-feature-table ~/momi/emp_v4_100nt_gg2_v2_noblanks.qza \
+  --i-tree /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.asv.nwk.qza \
+  --i-pcoa ~/momi/core_metrics_results_emp_v4_100nt_gg2_v2_noblanks/unweighted_unifrac_pcoa_results.qza \
+  --m-feature-metadata-file /home/mcdonadt/greengenes2/release/2024.09/2024.09.taxonomy.asv.tsv.qza \
+  --m-sample-metadata-file ~/momi/momi_metadata_merged5_qiitaUS.txt \
+  --p-ignore-missing-samples \
+  --p-filter-extra-samples \
+  --o-visualization ~/momi/empress_community_plot_emp_v4_100nt_gg2_v2_noblanks.qzv
+
+#ok now I want to do qiime diversity pcoa-biplot
+#first rel abund on feature table
+
+qiime feature-table relative-frequency \
+  --i-table ~/momi/emp_v4_100nt_gg2_v2_noblanks.qza \
+  --o-relative-frequency-table ~/momi/emp_v4_100nt_gg2_v2_noblanks_relfreq.qza
+
+#then filter the table to match pcoa. Filter samples 
+qiime feature-table filter-samples \
+  --i-table ~/momi/emp_v4_100nt_gg2_v2_noblanks_relfreq.qza \
+  --m-metadata-file ~/momi/core_metrics_results_emp_v4_100nt_gg2_v2_noblanks/unweighted_unifrac_pcoa_results.qza \
+  --o-filtered-table ~/momi/emp_v4_100nt_gg2_v2_noblanks_relfreq_f.qza \
+  --verbose
+
+
+  #now pcoa biplot
+qiime diversity pcoa-biplot \
+  --i-pcoa ~/momi/core_metrics_results_emp_v4_100nt_gg2_v2_noblanks/unweighted_unifrac_pcoa_results.qza \
+  --i-features ~/momi/emp_v4_100nt_gg2_v2_noblanks_relfreq_f.qza \
+  --o-biplot ~/momi/emp_v4_100nt_gg2_v2_noblanks_pcoa_biplot.qza
+
+  qiime empress community-plot \
+    --i-feature-table ~/momi/emp_v4_100nt_gg2_v2_noblanks.qza \
+    --i-tree /home/mcdonadt/greengenes2/release/2024.09/2024.09.phylogeny.asv.nwk.qza \
+    --i-pcoa ~/momi/emp_v4_100nt_gg2_v2_noblanks_pcoa_biplot.qza \
+    --m-feature-metadata-file /home/mcdonadt/greengenes2/release/2024.09/2024.09.taxonomy.asv.tsv.qza \
+    --m-sample-metadata-file ~/momi/momi_metadata_merged5_qiitaUS.txt \
+    --p-ignore-missing-samples \
+    --p-filter-extra-samples \
+    --o-visualization ~/momi/empress_community_plot_emp_v4_100nt_gg2_v2_noblanks_pcoa_biplot.qzv
+
+#now collapse the table to species level
+qiime taxa collapse \
+  --i-table ~/momi/emp_v4_100nt_gg2_v2_noblanks.qza \
+  --i-taxonomy /home/mcdonadt/greengenes2/release/2024.09/2024.09.taxonomy.asv.tsv.qza \
+  --p-level 7 \
+  --o-collapsed-table ~/momi/emp_v4_100nt_gg2_v2_noblanks_species7.qza
+
+  #now filter to make relative and then filter to pcoa
+qiime feature-table relative-frequency \
+    --i-table ~/momi/emp_v4_100nt_gg2_v2_noblanks_species7.qza \
+    --o-relative-frequency-table ~/momi/emp_v4_100nt_gg2_v2_noblanks_species7_relfreq.qza
+
+  qiime feature-table filter-samples \
+    --i-table ~/momi/emp_v4_100nt_gg2_v2_noblanks_species7_relfreq.qza \
+    --m-metadata-file ~/momi/core_metrics_results_emp_v4_100nt_gg2_v2_noblanks/unweighted_unifrac_pcoa_results.qza \
+    --o-filtered-table ~/momi/emp_v4_100nt_gg2_v2_noblanks_species7_relfreq_f.qza \
+    --verbose
+  
+    #now pcoa biplot
+  qiime diversity pcoa-biplot \
+    --i-pcoa ~/momi/core_metrics_results_emp_v4_100nt_gg2_v2_noblanks/unweighted_unifrac_pcoa_results.qza \
+    --i-features ~/momi/emp_v4_100nt_gg2_v2_noblanks_species7_relfreq_f.qza \
+    --o-biplot ~/momi/emp_v4_100nt_gg2_v2_noblanks_species7_pcoa_biplot.qza
+
+    qiime empress community-plot \
+      --i-feature-table ~/momi/emp_v4_100nt_gg2_v2_noblanks_species7.qza \
+      --i-pcoa ~/momi/emp_v4_100nt_gg2_v2_noblanks_species7_pcoa_biplot.qza \
+      --m-sample-metadata-file ~/momi/momi_metadata_merged5_qiitaUS.txt \
+      --p-ignore-missing-samples \
+      --p-filter-extra-samples \
+      --o-visualization ~/momi/empress_community_plot_emp_v4_100nt_gg2_v2_noblanks_species7_pcoa_biplot.qzv
+
+#above does not work because species is collapsed and i need tree
+#try qiime biplot without empress on original biplot table 
+qiime emperor biplot \
+  --i-biplot ~/momi/emp_v4_100nt_gg2_v2_noblanks_pcoa_biplot.qza \
+  --m-feature-metadata-file /home/mcdonadt/greengenes2/release/2024.09/2024.09.taxonomy.asv.tsv.qza \
+  --p-ignore-missing-samples \
+  --m-sample-metadata-file ~/momi/momi_metadata_merged5_qiitaUS.txt \
+  --o-visualization ~/momi/biplot_emp_v4_100nt_gg2_v2_noblanks.qzv
+
+  #do the biplot on species7 rel table
+qiime emperor biplot \
+    --i-biplot ~/momi/emp_v4_100nt_gg2_v2_noblanks_species7_pcoa_biplot.qza \
+    --p-ignore-missing-samples \
+    --m-sample-metadata-file ~/momi/momi_metadata_merged5_qiitaUS.txt \
+    --o-visualization ~/momi/biplot_emp_v4_100nt_gg2_v2_noblanks_species7.qzv
+
+    #now try 8 features in the biplot
+qiime emperor biplot \
+      --i-biplot ~/momi/emp_v4_100nt_gg2_v2_noblanks_species7_pcoa_biplot.qza \
+      --p-ignore-missing-samples \
+      --m-sample-metadata-file ~/momi/momi_metadata_merged5_qiitaUS.txt \
+      --p-number-of-features 8 \
+      --o-visualization ~/momi/biplot_emp_v4_100nt_gg2_v2_noblanks_species7_8n.qzv
+
+      #try 15
+qiime emperor biplot \
+        --i-biplot ~/momi/emp_v4_100nt_gg2_v2_noblanks_species7_pcoa_biplot.qza \
+        --p-ignore-missing-samples \
+        --m-sample-metadata-file ~/momi/momi_metadata_merged5_qiitaUS.txt \
+        --p-number-of-features 15 \
+        --o-visualization ~/momi/biplot_emp_v4_100nt_gg2_v2_noblanks_species7_15n.qzv
+
+#ok now group original emp no blanks qza table by primer_plate
+qiime feature-table group \
+  --i-table ~/momi/emp_v4_100nt_gg2_v2_noblanks.qza \
+  --m-metadata-file ~/momi/momi_metadata_merged5_qiitaUS.txt \
+  --m-metadata-column primer_plate \
+  --p-mode sum \
+  --p-axis sample \
+  --o-grouped-table ~/momi/emp_v4_100nt_gg2_v2_noblanks_primerplate.qza
+
+  #and then make a taxa bar plot with gg2 taxonomy
+qiime taxa barplot \
+    --i-table ~/momi/emp_v4_100nt_gg2_v2_noblanks_primerplate.qza \
+    --i-taxonomy /home/mcdonadt/greengenes2/release/2024.09/2024.09.taxonomy.asv.tsv.qza \
+    --o-visualization ~/momi/taxa_barplot_emp_v4_100nt_gg2_v2_noblanks_primerplate.qzv
+
+
+
+
+ 
+
 
