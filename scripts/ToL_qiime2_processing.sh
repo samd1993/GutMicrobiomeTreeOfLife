@@ -1,8 +1,8 @@
 #!/bin/bash
 # =============================================================================
-# TOLqiime2_simplified.sh
+# ToL_qiime2_processing.sh
 # Gut Microbiome Tree of Life (GMToL) — QIIME2 Core Processing Pipeline
-# Degregori et al. (2026) — Nature
+# Degregori et al. (in preparation) — preprint
 #
 # "An expansive animal gut microbiome dataset elucidates major compositional
 #  shifts across bilaterian evolution"
